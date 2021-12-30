@@ -17,3 +17,14 @@ How to run the repo
 2. Run this command
 
 `conda env create -f environment.txt`
+
+3. Using pip
+
+`python -m venv .`
+
+`source venv/bin/activate`
+
+`pip install -r environment.txt`
+
+
+
