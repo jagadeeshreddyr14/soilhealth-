@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../sat2credit"
+		},
+		{
+			"path": "../gpm_imd"
+		}
+	],
+	"settings": {}
+}

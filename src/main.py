@@ -21,11 +21,11 @@ ee.Initialize()
 
 
 # SETTINGS
-farm_path = '/data1/BKUP/micro_v2/s1_rvi/area/10647.csv'
+farm_path = '/data1/BKUP/micro_v2/s1_rvi/area/17613.csv'
 output_path = "./output"
 pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
 
-start_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=16))
+start_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=30))
 end_date = ee.Date(datetime.datetime.now())
 
 input_bands = ['B8', 'B4', 'B5', 'B11', 'B9', 'B1',
@@ -108,14 +108,13 @@ if __name__ == "__main__":
         
     for i in soil_nuts:
 
-        for nut, nut_slr in zip(glob.glob(f'data/{i}.pkl'), glob.glob(f'data/{i}*_slr.pkl')):
+        for nut, nut_slr in zip(glob.glob(f'data/models/{i}.pkl'), glob.glob(f'data/models/{i}*_slr.pkl')):
 
             with open(nut, 'rb') as file, open(nut_slr, 'rb') as file_slr:
 
                 mymodel, model_scaler = pickle.load(file), pickle.load(file_slr)
                 X_test = model_scaler.transform(input)
                 predictions = mymodel.predict(X_test)
-                # print(nut, nut_slr)
 
                 df_pred['prediction'] = predictions
 
@@ -136,5 +135,4 @@ if __name__ == "__main__":
                 }
 
             with rs.open(f"{output_path}/{os.path.basename(nut).split('.')[0]}.tif", 'w', **options) as src:
-                print(nut)
                 src.write(arr, 1)
