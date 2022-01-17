@@ -6,7 +6,10 @@ from glob import glob
 
 
 
-raster_images = glob("./output/*.tif")
+dirname = os.path.dirname(__file__)
+os.chdir(dirname)
+
+raster_images = glob("../output/*.tif")
 farm_path = '/data1/BKUP/micro_v2/s1_rvi/area/17613.csv'
 
 # read the farm

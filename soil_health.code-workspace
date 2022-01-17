@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../gpm_imd"
+		},
+		{
+			"path": "../../../../../data1/BKUP/aman/MAPSM/mapsm_masked_ndvi"
 		}
 	],
 	"settings": {}

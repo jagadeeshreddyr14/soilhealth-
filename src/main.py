@@ -22,7 +22,6 @@ ee.Initialize()
 
 # SETTINGS
 farm_path = '/data1/BKUP/micro_v2/s1_rvi/area/17613.csv'
-output_path = "./output"
 pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
 
 start_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=30))
@@ -106,9 +105,15 @@ input = df_pred.values
 
 if __name__ == "__main__":
         
+    dirname = os.path.dirname(__file__)
+    
+    os.chdir(dirname)
+
+    output_path = "../output"
+
     for i in soil_nuts:
 
-        for nut, nut_slr in zip(glob.glob(f'data/models/{i}.pkl'), glob.glob(f'data/models/{i}*_slr.pkl')):
+        for nut, nut_slr in zip(glob.glob(f'../data/models/{i}.pkl'), glob.glob(f'../data/models/{i}*_slr.pkl')):
 
             with open(nut, 'rb') as file, open(nut_slr, 'rb') as file_slr:
 
