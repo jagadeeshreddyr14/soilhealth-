@@ -9,9 +9,13 @@ import datetime
 import rasterio as rs
 import os
 from rasterio.transform import from_origin
+from rasterio.io import MemoryFile
+from rio_tiler.io import COGReader
+from shapely.geometry import mapping
+
 from indices import NDWI_function,  NDVI_function, NDVI_G_function, SR_n2_function, SR_N_function, TBVI1_function
 from ee_utils import addNDVI, clipToCol, maskS2clouds_min_max, maskS2clouds
-
+from zonalstats import get_zonal_stats
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -20,10 +24,10 @@ warnings.filterwarnings("ignore")
 ee.Initialize()
 
 
-def generate_points(farm_id):
+def generate_points(farm_path):
 
     # read the farm
-    geom = pd.read_csv(farm_id, header=None, sep='\n')
+    geom = pd.read_csv(farm_path, header=None, sep='\n')
 
     # convert to geojson
     feature = gpd.GeoSeries.from_wkt(geom.iloc[:, 0]).set_crs(
@@ -104,44 +108,94 @@ def genPredictions(nut, nut_slr, input):
     return predictions
 
 
+def get_feature_geometry(farm_path):
 
-def saveTiff(nut, arr, transform):
+    geom = pd.read_csv(farm_path, header=None, sep='\n')
+    ppolygon = mapping(gpd.GeoSeries.from_wkt(geom.values[0])[0])
     
+    return ppolygon
+
+
+def get_png(nut ,save_path_pre, data_array, transform, farm_path, farm_id):
+
+
+    folder_path = "png"
+    file_name = os.path.basename(nut).split('.')[0]
+
+    options = {
+        "driver": "GTiff",
+        "height": data_array.shape[0],
+        "width": data_array.shape[1],
+        "count": 1,
+        "dtype": np.float32,
+        "crs": 'EPSG:4326',
+        "transform": transform,
+    }
+
+    with MemoryFile() as memfile:
+        with memfile.open(**options) as dataset:
+            
+            dataset.write(data_array, 1)
+            
+        with memfile.open() as src:
+
+            with COGReader(src.name) as cog:
+                feat = get_feature_geometry(farm_path)
+                img = cog.feature(feat)
+                buf = img.render(img_format="png")
+                
+                if not os.path.exists(f"{save_path_pre}/{folder_path}/{farm_id}"):
+                    os.mkdir(os.path.join(f"{save_path_pre}/{folder_path}", str(farm_id) ))
+                    
+                with open(f"{save_path_pre}/{farm_id}/{farm_id}_{file_name}.png", 'wb') as src:
+                    src.write(buf)
+
+
+
+def saveTiff(nut, save_path_pre, data_array, transform, farm_id):
+    
+    folder_path = "tif"
+    file_name = os.path.basename(nut).split('.')[0]
     options = {
         "driver": "Gtiff",
-        "height": arr.shape[0],
-        "width": arr.shape[1],
+        "height": data_array.shape[0],
+        "width": data_array.shape[1],
         "count": 1,
         "dtype": np.float32,
         "crs": 'EPSG:4326',
         "transform": transform
     }
 
-    with rs.open(f"../output/{os.path.basename(nut).split('.')[0]}.tif", 'w', **options) as src:
-        src.write(arr, 1)
 
+    if not os.path.exists(f"{save_path_pre}/{folder_path}/{farm_id}"):
+        os.mkdir(os.path.join(f"{save_path_pre}/{folder_path}", str(farm_id) ))
+
+    with rs.open(f"{save_path_pre}/{folder_path}/{farm_id}/{farm_id}_{file_name}.tif", 'w', **options) as src:
+        src.write(data_array, 1)
 
 
 if __name__ == "__main__":
         
     dirname = os.path.dirname(__file__)
-    
     os.chdir(dirname)
 
-    # SETTINGS
-    farm_id = '/data1/BKUP/micro_v2/s1_rvi/area/17613.csv'
+    farm_id = 10973
+    farm_path = f'/data1/BKUP/micro_v2/s1_rvi/area/{farm_id}.csv'
+    save_path_pre = '../output/'
+    
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
 
-    start_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=30))
-    end_date = ee.Date(datetime.datetime.now())
+    start_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=200) )
+    end_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=150) )
 
     input_bands = ['B8', 'B4', 'B5', 'B11', 'B9', 'B1', 'SR_n2', 'SR_N', 'TBVI1', 'NDWI', 'NDVI_G']
     soil_nuts = ['pH', 'P', 'K', 'OC', 'N']
 
-    x_pt, y_pt, minx, maxy = generate_points(farm_id)
+    x_pt, y_pt, minx, maxy = generate_points(farm_path)
     geometry = ee.FeatureCollection(x_pt.map(xcor(y_pt))).flatten()
     predictor_bands = get_predictor_bands(geometry, start_date, end_date)
 
+    
     len_y = len(y_pt.getInfo())
     len_x = len(x_pt.getInfo())
 
@@ -149,7 +203,7 @@ if __name__ == "__main__":
     df_tmp = df[["longitude", "latitude"]]
     df_pred = df.loc[df['NDWI'].notna(), input_bands]
     input = df_pred.values
-
+    transform = from_origin(minx, maxy, pixel_size, pixel_size)
 
     for i in soil_nuts:
 
@@ -161,8 +215,9 @@ if __name__ == "__main__":
 
             df_out = pd.merge(df_tmp, df_pred, left_index=True, right_index=True, how='left')['prediction']
 
-            arr = df_out.values.reshape( len_y, len_x )
-            transform = from_origin(minx, maxy, pixel_size, pixel_size)
-
-            saveTiff(nut, arr, transform)
-
+            data_array = df_out.values.reshape( len_y, len_x )
+            saveTiff(nut, save_path_pre, data_array, transform, farm_id)
+            # get_png(nut, save_path_pre, data_array, transform, farm_path, farm_id)
+    
+    zonal_stats = get_zonal_stats(farm_path, f"../output/tif/{farm_id}")
+    print(zonal_stats)
