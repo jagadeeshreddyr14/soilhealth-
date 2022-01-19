@@ -27,4 +27,10 @@ How to run the repo
 `pip install -r environment.txt`
 
 
+# Info on code and implementation
+
+## - soil_health.py
+
+1. Executable file which outputs tiff for now for the bounded box of the feature. Later plan to save the raster in memory and then output clipped to the feature. 
+ 
 
