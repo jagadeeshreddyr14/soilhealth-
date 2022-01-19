@@ -116,11 +116,10 @@ def get_feature_geometry(farm_path):
     return ppolygon
 
 
-def get_png(nut ,save_path_pre, data_array, transform, farm_path, farm_id):
+def get_png(nut ,save_path_png, data_array, transform, farm_path, farm_id):
 
-
-    folder_path = "png"
     file_name = os.path.basename(nut).split('.')[0]
+    farm_dir = f"{save_path_png}/{farm_id}"
 
     options = {
         "driver": "GTiff",
@@ -144,18 +143,19 @@ def get_png(nut ,save_path_pre, data_array, transform, farm_path, farm_id):
                 img = cog.feature(feat)
                 buf = img.render(img_format="png")
                 
-                if not os.path.exists(f"{save_path_pre}/{folder_path}/{farm_id}"):
-                    os.mkdir(os.path.join(f"{save_path_pre}/{folder_path}", str(farm_id) ))
+                if not os.path.exists(farm_dir):
+                    os.mkdir(farm_dir)
                     
-                with open(f"{save_path_pre}/{farm_id}/{farm_id}_{file_name}.png", 'wb') as src:
+                with open(f"{farm_dir}/{file_name}.png", 'wb') as src:
                     src.write(buf)
 
 
 
-def saveTiff(nut, save_path_pre, data_array, transform, farm_id):
+def saveTiff(nut, save_path_tiff, data_array, transform, farm_id):
     
-    folder_path = "tif"
     file_name = os.path.basename(nut).split('.')[0]
+    farm_dir = f"{save_path_tiff}/{farm_id}"
+    
     options = {
         "driver": "Gtiff",
         "height": data_array.shape[0],
@@ -167,10 +167,10 @@ def saveTiff(nut, save_path_pre, data_array, transform, farm_id):
     }
 
 
-    if not os.path.exists(f"{save_path_pre}/{folder_path}/{farm_id}"):
-        os.mkdir(os.path.join(f"{save_path_pre}/{folder_path}", str(farm_id) ))
+    if not os.path.exists(farm_dir):
+        os.mkdir(farm_dir)
 
-    with rs.open(f"{save_path_pre}/{folder_path}/{farm_id}/{farm_id}_{file_name}.tif", 'w', **options) as src:
+    with rs.open(f"{farm_dir}/{file_name}.tif", 'w', **options) as src:
         src.write(data_array, 1)
 
 
@@ -181,7 +181,9 @@ if __name__ == "__main__":
 
     farm_id = 10973
     farm_path = f'/data1/BKUP/micro_v2/s1_rvi/area/{farm_id}.csv'
-    save_path_pre = '../output/'
+    save_path_tiff = '../output/tif/'
+    save_path_png = '../output/png/'
+
     
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
 
@@ -216,8 +218,8 @@ if __name__ == "__main__":
             df_out = pd.merge(df_tmp, df_pred, left_index=True, right_index=True, how='left')['prediction']
 
             data_array = df_out.values.reshape( len_y, len_x )
-            saveTiff(nut, save_path_pre, data_array, transform, farm_id)
-            # get_png(nut, save_path_pre, data_array, transform, farm_path, farm_id)
+            saveTiff(nut, save_path_tiff, data_array, transform, farm_id)
+            # get_png(nut, save_path_png, data_array, transform, farm_path, farm_id)
     
-    zonal_stats = get_zonal_stats(farm_path, f"../output/tif/{farm_id}")
+    zonal_stats = get_zonal_stats(farm_path, f"{save_path_tiff}/{farm_id}")
     print(zonal_stats)
