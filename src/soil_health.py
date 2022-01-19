@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore")
 ee.Initialize()
 
 
-def generate_points(farm_path):
+def generate_points(farm_path, pixel_size):
 
     # read the farm
     geom = pd.read_csv(farm_path, header=None, sep='\n')
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     input_bands = ['B8', 'B4', 'B5', 'B11', 'B9', 'B1', 'SR_n2', 'SR_N', 'TBVI1', 'NDWI', 'NDVI_G']
     soil_nuts = ['pH', 'P', 'K', 'OC', 'N']
 
-    x_pt, y_pt, minx, maxy = generate_points(farm_path)
+    x_pt, y_pt, minx, maxy = generate_points(farm_path, pixel_size)
     geometry = ee.FeatureCollection(x_pt.map(xcor(y_pt))).flatten()
     predictor_bands = get_predictor_bands(geometry, start_date, end_date)
 

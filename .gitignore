@@ -3,3 +3,5 @@
 *.code-workspace
 
 *.pyc
+
+*.tif
