@@ -20,13 +20,15 @@ if __name__ == "__main__":
 
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
 
-    start_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=270) )
-    end_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=250) )
+    start_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=60) )
+    end_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=30) )
 
     input_bands = ['B8', 'B4', 'B5', 'B11', 'B9', 'B1', 'SR_n2', 'SR_N', 'TBVI1', 'NDWI', 'NDVI_G']
     soil_nuts = ['pH', 'P', 'K', 'OC', 'N']
 
-    farm_list = ["~/Downloads/17997.csv", "~/Downloads/18013.csv", "~/Downloads/17994.csv"]
+    # farm_list = ["~/Downloads/17997.csv", "~/Downloads/18013.csv", "~/Downloads/17994.csv"]
+    farm_list = ['/data1/BKUP/micro_v2/s1_rvi/area/18044.csv', '/data1/BKUP/micro_v2/s1_rvi/area/18046.csv' ]
+
     for i in farm_list:
         farm_path = i 
         farm_id = os.path.basename(farm_path).split(".")[0]
@@ -63,5 +65,8 @@ if __name__ == "__main__":
         
         zonal_stats = get_zonal_stats(farm_path, f"{save_path_tiff}/{farm_id}")
         zonal_stats['date'] = start_date.format("YYYY-MM-dd").getInfo()
-        print(zonal_stats)
-        pd.DataFrame.from_records([zonal_stats]).to_csv(f"{save_path_csv}/{farm_id}.csv", index = False)
+        df = pd.DataFrame(zonal_stats)
+        df.rename(index={'median': 'average', 'percentile_5' : 'min', 'percentile_95': 'max'}, inplace = True)
+        df[['P', 'K', 'N']] = df[['P', 'K', 'N']].applymap(lambda x: int(x))
+        df[['OC', 'pH']] = df[['OC', 'pH']].applymap(lambda x : round(x, 2))
+        df.to_csv(f"{save_path_csv}/{farm_id}.csv")
