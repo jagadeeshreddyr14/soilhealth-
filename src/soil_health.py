@@ -14,7 +14,8 @@ from rio_tiler.io import COGReader
 from shapely.geometry import mapping
 
 from indices import NDWI_function,  NDVI_function, NDVI_G_function, SR_n2_function, SR_N_function, TBVI1_function
-from ee_utils import addNDVI, clipToCol, maskS2clouds_min_max, maskS2clouds
+from ee_utils import addNDVI, clipToCol, maskS2clouds, masker
+from ndvi_barren import get_end_date
 from zonalstats import get_zonal_stats
 import warnings
 warnings.filterwarnings("ignore")
@@ -52,23 +53,13 @@ def xcor(y_pt):
     return wrap
 
 
-def masker(greenest, minest):
-    def wrap(image):
-            
-        mask1 = greenest.select('NDVI').gt(0.3)
-        mask2 = minest.select('NDVI').lt(0.6)
-        mask3 = image.select('NDVI').gt(0.05)
-        mask4 = image.select('NDVI').lt(0.3)
-        return image.updateMask(mask1).updateMask(mask2).updateMask(mask3).updateMask(mask4)
-
-    return wrap
-
 def get_predictor_bands(geometry, start_date, end_date):
     
     s2_sr = ee.ImageCollection("COPERNICUS/S2_SR")
 
-    s2_sr_filter = s2_sr.filterBounds(geometry.geometry()).filterDate(
-        start_date, end_date).map(maskS2clouds)
+    s2_sr_filter = s2_sr.filterBounds(geometry.geometry())\
+                   .filter(ee.Filter.lte('CLOUDY_PIXEL_PERCENTAGE', 50))\
+                   .filterDate(ee.Date(start_date), ee.Date(end_date)).map(maskS2clouds)
 
     sentinel2 = ee.ImageCollection(s2_sr_filter.mosaic().set(
         "system:time_start", ee.Image(s2_sr_filter.first()).get("system:time_start")))
@@ -79,7 +70,9 @@ def get_predictor_bands(geometry, start_date, end_date):
 
 
     s2_NDVI = ee.ImageCollection('COPERNICUS/S2_SR').filterBounds(geometry).filterDate('2020-01-01', '2020-12-31')\
-        .filter(ee.Filter.lte('CLOUDY_PIXEL_PERCENTAGE', 50)).map(maskS2clouds_min_max).map(addNDVI).select("NDVI").map(clipToCol(geometry))
+                .filter(ee.Filter.lte('CLOUDY_PIXEL_PERCENTAGE', 50))\
+                .map(maskS2clouds).map(addNDVI)\
+                .select("NDVI").map(clipToCol(geometry))
 
     greenest = s2_NDVI.qualityMosaic('NDVI')
     minest = s2_NDVI.min()
@@ -187,8 +180,9 @@ if __name__ == "__main__":
     
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
 
-    start_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=200) )
-    end_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=150) )
+    end_date = get_end_date(farm_id)
+
+    start_date = end_date - datetime.timedelta(days=30)
 
     input_bands = ['B8', 'B4', 'B5', 'B11', 'B9', 'B1', 'SR_n2', 'SR_N', 'TBVI1', 'NDWI', 'NDVI_G']
     soil_nuts = ['pH', 'P', 'K', 'OC', 'N']
