@@ -169,10 +169,10 @@ def saveTiff(nut, save_path_tiff, data_array, transform, farm_id):
 
 if __name__ == "__main__":
         
-    dirname = os.path.dirname(__file__)
+    dirname = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dirname)
 
-    farm_id = 10973
+    farm_id = 18529
     farm_path = f'/data1/BKUP/micro_v2/s1_rvi/area/{farm_id}.csv'
     save_path_tiff = '../output/tif/'
     save_path_png = '../output/png/'
@@ -213,7 +213,7 @@ if __name__ == "__main__":
 
             data_array = df_out.values.reshape( len_y, len_x )
             saveTiff(nut, save_path_tiff, data_array, transform, farm_id)
-            # get_png(nut, save_path_png, data_array, transform, farm_path, farm_id)
+            get_png(nut, save_path_png, data_array, transform, farm_path, farm_id)
     
     zonal_stats = get_zonal_stats(farm_path, f"{save_path_tiff}/{farm_id}")
     print(zonal_stats)

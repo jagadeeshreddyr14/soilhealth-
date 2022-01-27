@@ -59,7 +59,7 @@ def get_end_date(farm_id):
     df = df[df.SM > 0]
     df.index = pd.to_datetime(df.index, format = '%Y-%m-%d')
     df = df.groupby(pd.Grouper(freq="M")).mean()['SM']
-    end_date = df[df < 0.3].last_valid_index()
+    end_date = df[df < 0.4].last_valid_index()
 
     return end_date
 
@@ -68,7 +68,7 @@ def get_end_date(farm_id):
 
 if __name__ == "__main__":
 
-    dirname = os.path.dirname(__file__)
+    dirname = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dirname)
 
     farm_id = 10973

@@ -32,7 +32,7 @@ def get_zonal_stats(farm_path, raster_path):
 if __name__ == "__main__":
 
 
-    dirname = os.path.dirname(__file__)
+    dirname = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dirname)
 
     farm_path = '/data1/BKUP/micro_v2/s1_rvi/area/17994.csv'

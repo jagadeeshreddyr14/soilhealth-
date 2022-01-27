@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 
 if __name__ == "__main__":
         
-    dirname = os.path.dirname(__file__)
+    dirname = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dirname)
 
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
@@ -35,8 +35,6 @@ if __name__ == "__main__":
 
     for i in farm_list:
 
-
-
         farm_path = i 
         farm_id = os.path.basename(farm_path).split(".")[0]
         save_path_tiff = '../output/tif/'
@@ -47,11 +45,9 @@ if __name__ == "__main__":
         end_date = get_end_date(farm_id)
         start_date = end_date - datetime.timedelta(days=30)
         predictor_bands = get_predictor_bands(geometry, start_date, end_date)
-
         
         len_y = len(y_pt.getInfo())
         len_x = len(x_pt.getInfo())
-
 
         df = getDataFrame(predictor_bands, input_bands, geometry)
         df_tmp = df[["longitude", "latitude"]]
@@ -59,18 +55,18 @@ if __name__ == "__main__":
         input = df_pred.values
         transform = from_origin(minx, maxy, pixel_size, pixel_size)
 
-        # for i in soil_nuts:
+        for i in soil_nuts:
 
-        #     for nut, nut_slr in zip(glob.glob(f'../data/models/{i}.pkl'), glob.glob(f'../data/models/{i}*_slr.pkl')):
+            for nut, nut_slr in zip(glob.glob(f'../data/models/{i}.pkl'), glob.glob(f'../data/models/{i}*_slr.pkl')):
 
-        #         predictions = genPredictions(nut, nut_slr, input)
+                predictions = genPredictions(nut, nut_slr, input)
                 
-        #         df_pred['prediction'] = predictions
+                df_pred['prediction'] = predictions
 
-        #         df_out = pd.merge(df_tmp, df_pred, left_index=True, right_index=True, how='left')['prediction']
+                df_out = pd.merge(df_tmp, df_pred, left_index=True, right_index=True, how='left')['prediction']
 
-        #         data_array = df_out.values.reshape( len_y, len_x )
-        #         saveTiff(nut, save_path_tiff, data_array, transform, farm_id)
+                data_array = df_out.values.reshape( len_y, len_x )
+                saveTiff(nut, save_path_tiff, data_array, transform, farm_id)
                 # get_png(nut, save_path_pre, data_array, transform, farm_path, farm_id)
         
         zonal_stats = get_zonal_stats(farm_path, f"{save_path_tiff}/{farm_id}")
@@ -79,6 +75,6 @@ if __name__ == "__main__":
         df.rename(index={'median': 'average', 'percentile_5' : 'min', 'percentile_95': 'max'}, inplace = True)
         df[['P', 'K', 'N']] = df[['P', 'K', 'N']].applymap(lambda x: int(x))
         df[['OC', 'pH']] = df[['OC', 'pH']].applymap(lambda x : round(x, 2))
-        # df.to_csv(f"{save_path_csv}/{farm_id}.csv")
+        df.to_csv(f"{save_path_csv}/{farm_id}.csv")
         print(df)
         print(f"{farm_id} saved!" )
