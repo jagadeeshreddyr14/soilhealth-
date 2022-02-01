@@ -55,11 +55,11 @@ def get_end_date(farm_id):
 
     sm_info = {"SM": {key['properties']['date']:key['properties']['NDVI'] for key in smTimeSeries.getInfo()['features']} }    
 
-    df = pd.DataFrame(sm_info)
-    df = df[df.SM > 0]
-    df.index = pd.to_datetime(df.index, format = '%Y-%m-%d')
-    df = df.groupby(pd.Grouper(freq="M")).mean()['SM']
-    end_date = df[df < 0.4].last_valid_index()
+    df_sm = pd.DataFrame(sm_info)
+    df_sm = df_sm[df_sm.SM > 0]
+    df_sm.index = pd.to_datetime(df_sm.index, format = '%Y-%m-%d')
+    df_sm = df_sm.groupby(pd.Grouper(freq="M")).mean()['SM']
+    end_date = df_sm[df_sm < 0.4].last_valid_index()
 
     return end_date
 

@@ -59,17 +59,22 @@ def get_predictor_bands(geometry, start_date, end_date):
 
     s2_sr_filter = s2_sr.filterBounds(geometry.geometry())\
                    .filter(ee.Filter.lte('CLOUDY_PIXEL_PERCENTAGE', 50))\
-                   .filterDate(ee.Date(start_date), ee.Date(end_date)).map(maskS2clouds)
+                   .filterDate(ee.Date(start_date), ee.Date(end_date))\
+                   .map(maskS2clouds)
 
     sentinel2 = ee.ImageCollection(s2_sr_filter.mosaic().set(
-        "system:time_start", ee.Image(s2_sr_filter.first()).get("system:time_start")))
+                    "system:time_start", ee.Image(s2_sr_filter.first())\
+                    .get("system:time_start")))
 
 
-    indices_collection = sentinel2.map(NDWI_function).map(TBVI1_function).map(
-        NDVI_G_function).map(SR_N_function).map(SR_n2_function).map(NDVI_function)
+    indices_collection = sentinel2\
+                        .map(NDWI_function).map(TBVI1_function)\
+                        .map(NDVI_G_function).map(SR_N_function)\
+                        .map(SR_n2_function).map(NDVI_function)
 
 
-    s2_NDVI = ee.ImageCollection('COPERNICUS/S2_SR').filterBounds(geometry).filterDate('2020-01-01', '2020-12-31')\
+    s2_NDVI = ee.ImageCollection('COPERNICUS/S2_SR').filterBounds(geometry)\
+                .filterDate('2020-01-01', '2020-12-31')\
                 .filter(ee.Filter.lte('CLOUDY_PIXEL_PERCENTAGE', 50))\
                 .map(maskS2clouds).map(addNDVI)\
                 .select("NDVI").map(clipToCol(geometry))
@@ -83,7 +88,8 @@ def get_predictor_bands(geometry, start_date, end_date):
 
 def getDataFrame(predictor_bands, input_bands, geometry):
 
-    df = pd.DataFrame(predictor_bands.select(input_bands).getRegion(geometry.geometry(), 10).getInfo())
+    df = pd.DataFrame(predictor_bands.select(input_bands)\
+                    .getRegion(geometry.geometry(), 10).getInfo())
     df, df.columns = df[1:], df.iloc[0]
     df = df.drop(["id", "time"], axis=1)
 
@@ -177,11 +183,9 @@ if __name__ == "__main__":
     save_path_tiff = '../output/tif/'
     save_path_png = '../output/png/'
 
-    
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
 
     end_date = get_end_date(farm_id)
-
     start_date = end_date - datetime.timedelta(days=30)
 
     input_bands = ['B8', 'B4', 'B5', 'B11', 'B9', 'B1', 'SR_n2', 'SR_N', 'TBVI1', 'NDWI', 'NDVI_G']
@@ -191,7 +195,6 @@ if __name__ == "__main__":
     geometry = ee.FeatureCollection(x_pt.map(xcor(y_pt))).flatten()
     predictor_bands = get_predictor_bands(geometry, start_date, end_date)
 
-    
     len_y = len(y_pt.getInfo())
     len_x = len(x_pt.getInfo())
 
@@ -206,9 +209,7 @@ if __name__ == "__main__":
         for nut, nut_slr in zip(glob.glob(f'../data/models/{i}.pkl'), glob.glob(f'../data/models/{i}*_slr.pkl')):
 
             predictions = genPredictions(nut, nut_slr, input)
-            
             df_pred['prediction'] = predictions
-
             df_out = pd.merge(df_tmp, df_pred, left_index=True, right_index=True, how='left')['prediction']
 
             data_array = df_out.values.reshape( len_y, len_x )
