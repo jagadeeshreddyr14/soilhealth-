@@ -9,10 +9,11 @@ from rasterio.transform import from_origin
 from zonalstats import get_zonal_stats
 import time
 
-from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff
+from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff, read_farm
 from ndvi_barren import get_end_date
 
 from subprocess import call
+from pyproj import Geod
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -20,9 +21,9 @@ warnings.filterwarnings("ignore")
 
 def roundoff(x):
     if x.name in ['P', 'K', 'N']:
-        return x.astype(int)
+        return x.fillna(np.nan).astype(np.int32, errors='ignore')
     elif x.name in ['OC', 'pH']:
-        return x.round(decimals=2)
+        return x.fillna(np.nan).round(decimals=2)
     else:
         return x
 
@@ -57,7 +58,7 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
     return None
 
 
-def main_function(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv):
+def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv):
 
     farm_id = os.path.basename(farm_path).split(".")[0]
     save_csv_stats = os.path.join(path_csv, f"{farm_id}.csv")
@@ -65,6 +66,9 @@ def main_function(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, 
     if os.path.exists(save_csv_stats):
         logger.info(f"Farm CSV exists: {save_csv_stats}")
         return None
+
+    if get_area(farm_path) < 150:
+        return logger.error(f"Farm size small: {farm_path}")
 
     x_pt, y_pt, minx, maxy = generate_points(farm_path, pixel_size)
     len_y, len_x = len(y_pt.getInfo()), len(x_pt.getInfo())
@@ -81,6 +85,7 @@ def main_function(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, 
     transform = from_origin(minx, maxy, pixel_size, pixel_size)
 
     for nut, nut_slr in soil_nutrients:
+        
         try:
             gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, path_tiff, transform,
                                  farm_id, len_y, len_x)
@@ -99,9 +104,19 @@ def main_function(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, 
 
 
 def get_path(param, fdr_name):
-    nslr = glob.glob(f"{model_path + fdr_name[0]}/{param}*.pkl")[0]
-    nnut = glob.glob(f"{model_path + fdr_name[1]}/{param}*.pkl")[0]
+    nnut = glob.glob(f"{model_path + fdr_name[0]}/{param}*.pkl")[0]
+    nslr = glob.glob(f"{model_path + fdr_name[1]}/{param}*.pkl")[0]
     return nnut, nslr
+
+
+def get_area(farm_path):
+    
+    farm_poly = read_farm(farm_path).values[0]
+    # specify a named ellipsoid: geodesic area
+    geod = Geod(ellps="WGS84")
+    area = abs(geod.geometry_area_perimeter(farm_poly)[0])
+
+    return area
 
 
 if __name__ == "__main__":
@@ -115,7 +130,7 @@ if __name__ == "__main__":
     ee.Initialize()
 
     model_path = '../data/models/'
-    save_path_tiff = '../output/tif/'
+    save_path_tiff = '../output/tif'
     save_path_csv = '../output/csv/'
 
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
@@ -129,10 +144,11 @@ if __name__ == "__main__":
     farm_list = glob.glob(os.path.join(default_path, "[0-9]*.csv"))
 
     for i, farm_path in enumerate(farm_list):
-
-        main_function(farm_path, pixel_size, input_bands,
-                        soil_nuts, save_path_tiff, save_path_csv)
         
+        if i> 20:
+            break
+        main(farm_path, pixel_size, input_bands,
+                        soil_nuts, save_path_tiff, save_path_csv)
 
     end = time.time()
 
