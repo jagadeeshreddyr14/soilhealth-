@@ -21,9 +21,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-# Initialize the library.
-ee.Initialize()
+from logs import MyLogger
 
+dirname = os.path.dirname(os.path.abspath(__file__))
+os.chdir(dirname)
+
+logger = MyLogger(module_name = __name__, filename="../logs/soil_health.log")
 
 def generate_points(farm_path, pixel_size):
 
@@ -171,10 +174,14 @@ def saveTiff(nut, save_path_tiff, data_array, transform, farm_id):
 
     with rs.open(f"{farm_dir}/{file_name}.tif", 'w', **options) as src:
         src.write(data_array, 1)
+        logger.info(f"Raster written to {farm_dir}/{file_name}")
 
 
 if __name__ == "__main__":
         
+
+    # Initialize the library.
+    ee.Initialize()
     dirname = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dirname)
 
@@ -213,6 +220,7 @@ if __name__ == "__main__":
             df_out = pd.merge(df_tmp, df_pred, left_index=True, right_index=True, how='left')['prediction']
 
             data_array = df_out.values.reshape( len_y, len_x )
+            data_array = np.flip(data_array, axis = 0)
             saveTiff(nut, save_path_tiff, data_array, transform, farm_id)
             get_png(nut, save_path_png, data_array, transform, farm_path, farm_id)
     

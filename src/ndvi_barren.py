@@ -6,7 +6,6 @@ import geopandas as gpd
 import os
 import datetime
 
-ee.Initialize()
 
 def getGeometry(farm_path):
 
@@ -67,6 +66,9 @@ def get_end_date(farm_id):
 
 
 if __name__ == "__main__":
+
+
+    ee.Initialize()
 
     dirname = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dirname)

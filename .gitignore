@@ -2,6 +2,10 @@
 
 *.code-workspace
 
+__pycache__
+
 *.pyc
 
 *.tif
+
+output
