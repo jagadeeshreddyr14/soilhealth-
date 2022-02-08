@@ -9,8 +9,8 @@ from rasterio.transform import from_origin
 from zonalstats import get_zonal_stats
 import time
 
-from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff, read_farm
-from ndvi_barren import get_end_date
+from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff
+from ndvi_barren import get_end_date, read_farm
 
 from subprocess import call
 from pyproj import Geod
@@ -74,7 +74,7 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     len_y, len_x = len(y_pt.getInfo()), len(x_pt.getInfo())
     geometry = ee.FeatureCollection(x_pt.map(xcor(y_pt))).flatten()
 
-    end_date = get_end_date(farm_id)
+    end_date = get_end_date(farm_path)
     start_date = end_date - datetime.timedelta(days=30)
 
     predictor_bands = get_predictor_bands(geometry, start_date, end_date)
@@ -145,11 +145,14 @@ if __name__ == "__main__":
 
     for i, farm_path in enumerate(farm_list):
         
-        if i> 20:
-            break
+        # if i> 20:
+        #     break
+        # from shapely import wkt
+
+        farm_path = "../output/client_wkt/test_Nagaraj.csv"
         main(farm_path, pixel_size, input_bands,
                         soil_nuts, save_path_tiff, save_path_csv)
-
+        break
     end = time.time()
 
     print(end-start)

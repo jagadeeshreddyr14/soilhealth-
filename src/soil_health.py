@@ -5,18 +5,16 @@ import pickle
 import glob
 import pandas as pd
 import numpy as np
-import geopandas as gpd
 import datetime
 import rasterio as rs
 import os
 from rasterio.transform import from_origin
-from rasterio.io import MemoryFile
-from rio_tiler.io import COGReader
-from shapely.geometry import mapping
+# from rasterio.io import MemoryFile
+# from rio_tiler.io import COGReader
 
 from indices import NDWI_function,  NDVI_function, NDVI_G_function, SR_n2_function, SR_N_function, TBVI1_function
 from ee_utils import addNDVI, clipToCol, maskS2clouds, masker
-from ndvi_barren import get_end_date
+from ndvi_barren import get_end_date, read_farm, get_py_geometry
 from zonalstats import get_zonal_stats
 import warnings
 warnings.filterwarnings("ignore")
@@ -26,18 +24,6 @@ dirname = os.path.dirname(os.path.abspath(__file__))
 os.chdir(dirname)
 
 logger = MyLogger(module_name=__name__, filename="../logs/soil_health.log")
-
-
-def read_farm(farm_path, setcrs = False):
-
-    geom = pd.read_csv(farm_path, header=None, sep='\n')
-
-    farm_poly = gpd.GeoSeries.from_wkt(geom.iloc[:, 0])
-
-    if setcrs:
-        return farm_poly.set_crs("EPSG:4326")
-    
-    return farm_poly
 
 
 def generate_points(farm_path, pixel_size):
@@ -120,46 +106,41 @@ def genPredictions(nut, nut_slr, input_var):
     return predictions
 
 
-def get_feature_geometry(farm_path):
-
-    geom = pd.read_csv(farm_path, header=None, sep='\n')
-    ppolygon = mapping(gpd.GeoSeries.from_wkt(geom.values[0])[0])
-
-    return ppolygon
 
 
-def get_png(nut, save_path_png, data_array, transform, farm_path, farm_id):
 
-    file_name = os.path.basename(nut).split('.')[0]
-    farm_dir = f"{save_path_png}/{farm_id}"
+# def get_png(nut, save_path_png, data_array, transform, farm_path, farm_id):
 
-    options = {
-        "driver": "GTiff",
-        "height": data_array.shape[0],
-        "width": data_array.shape[1],
-        "count": 1,
-        "dtype": np.float32,
-        "crs": 'EPSG:4326',
-        "transform": transform,
-    }
+#     file_name = os.path.basename(nut).split('.')[0]
+#     farm_dir = f"{save_path_png}/{farm_id}"
 
-    with MemoryFile() as memfile:
-        with memfile.open(**options) as dataset:
+#     options = {
+#         "driver": "GTiff",
+#         "height": data_array.shape[0],
+#         "width": data_array.shape[1],
+#         "count": 1,
+#         "dtype": np.float32,
+#         "crs": 'EPSG:4326',
+#         "transform": transform,
+#     }
 
-            dataset.write(data_array, 1)
+#     with MemoryFile() as memfile:
+#         with memfile.open(**options) as dataset:
 
-        with memfile.open() as src:
+#             dataset.write(data_array, 1)
 
-            with COGReader(src.name) as cog:
-                feat = get_feature_geometry(farm_path)
-                img = cog.feature(feat)
-                buf = img.render(img_format="png")
+#         with memfile.open() as src:
 
-                if not os.path.exists(farm_dir):
-                    os.mkdir(farm_dir)
+#             with COGReader(src.name) as cog:
+#                 feat = get_py_geometry(farm_path)
+#                 img = cog.feature(feat)
+#                 buf = img.render(img_format="png")
 
-                with open(f"{farm_dir}/{file_name}.png", 'wb') as src:
-                    src.write(buf)
+#                 if not os.path.exists(farm_dir):
+#                     os.mkdir(farm_dir)
+
+#                 with open(f"{farm_dir}/{file_name}.png", 'wb') as src:
+#                     src.write(buf)
 
 
 def saveTiff(nut, save_path_tiff, data_array, transform, farm_id):
@@ -231,8 +212,8 @@ if __name__ == "__main__":
             data_array = df_out.values.reshape(len_y, len_x)
             data_array = np.flip(data_array, axis=0)
             saveTiff(nut, save_path_tiff, data_array, transform, farm_id)
-            get_png(nut, save_path_png, data_array,
-                    transform, farm_path, farm_id)
+            # get_png(nut, save_path_png, data_array,
+            #         transform, farm_path, farm_id)
 
     zonal_stats = get_zonal_stats(farm_path, f"{save_path_tiff}/{farm_id}")
     print(zonal_stats)

@@ -7,11 +7,31 @@ import os
 import datetime
 
 
-def getGeometry(farm_path):
+def read_farm(farm_path, setcrs = False):
 
     geom = pd.read_csv(farm_path, header=None, sep='\n')
 
-    pjson = mapping(gpd.GeoSeries.from_wkt(geom.values[0])[0])
+    farm_poly = gpd.GeoSeries.from_wkt(geom.iloc[:, 0])
+    
+    if setcrs:
+        return farm_poly.set_crs("EPSG:4326")
+    
+    return farm_poly
+
+
+def get_py_geometry(farm_path):
+
+    farm_poly = read_farm(farm_path)
+    ppolygon = mapping(farm_poly[0])
+
+    return ppolygon
+
+
+def get_ee_Geometry(farm_path):
+
+    farm_poly = read_farm(farm_path)
+
+    pjson = mapping(farm_poly[0])
 
     ppolygon = ee.Geometry.Polygon(pjson['coordinates'])
     
@@ -35,11 +55,9 @@ def timeSeries(geometry, fname):
     return wrap
 
 
-def get_end_date(farm_id):
+def get_end_date(farm_path):
 
-    farm_path = f'/data1/BKUP/micro_v2/s1_rvi/area/{farm_id}.csv'
-
-    features = getGeometry(farm_path)
+    features = get_ee_Geometry(farm_path)
 
     start_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=360) )
     current_date = ee.Date(datetime.datetime.now() - datetime.timedelta(days=0) )
@@ -78,7 +96,7 @@ if __name__ == "__main__":
     # print(end_date)
     farm_path = f'/data1/BKUP/micro_v2/s1_rvi/area/{farm_id}.csv'
 
-    features = getGeometry(farm_path)
+    features = get_ee_Geometry(farm_path)
 
     imageCollection = ee.ImageCollection("COPERNICUS/S2_SR").filterDate('2021-06-01', '2021-12-30')\
                         .filterBounds(features.geometry())\
