@@ -51,7 +51,7 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
                       'percentile_95': 'max'}, inplace=True)
 
     dfl = dfl.apply(lambda x: roundoff(x))
-
+    dfl.pH = dfl.pH.clip(0, 7)
     if save_as_csv:
         dfl.to_csv(f"{path_csv}/{farmid}.csv")
 
@@ -81,7 +81,6 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     df = getDataFrame(predictor_bands, pred_bands, geometry)
     df_tmp = df[["longitude", "latitude"]]
     df_pred = df.loc[df['NDWI'].notna(), pred_bands]
-
     transform = from_origin(minx, maxy, pixel_size, pixel_size)
 
     for nut, nut_slr in soil_nutrients:
@@ -89,6 +88,7 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
         try:
             gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, path_tiff, transform,
                                  farm_id, len_y, len_x)
+                                                      
         except ValueError as e:
             logger.error(f"{e}")
             return
@@ -149,7 +149,7 @@ if __name__ == "__main__":
         #     break
         # from shapely import wkt
 
-        farm_path = "../output/client_wkt/test_Nagaraj.csv"
+        farm_path = "../output/client_wkt/test_new.csv"
         main(farm_path, pixel_size, input_bands,
                         soil_nuts, save_path_tiff, save_path_csv)
         break
