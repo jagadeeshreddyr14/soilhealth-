@@ -130,8 +130,14 @@ if __name__ == "__main__":
     ee.Initialize()
 
     model_path = '../data/models/'
-    save_path_tiff = '../output/tif'
+    save_path_tiff = '../output/tif/'
     save_path_csv = '../output/csv/'
+    
+    if not os.path.exists(save_path_tiff):
+        os.makedirs(save_path_tiff)
+    
+    if not os.path.exists(save_path_csv):
+        os.makedirs(save_path_csv)
 
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
     input_bands = ['B8', 'B4', 'B5', 'B11', 'B9', 'B1',
