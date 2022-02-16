@@ -62,7 +62,7 @@ def get_predictor_bands(geometry, start_date, end_date):
         .filterDate(ee.Date(start_date), ee.Date(end_date))\
         .map(maskS2clouds)
 
-    sentinel2 = ee.ImageCollection(s2_sr_filter.mosaic().set(
+    sentinel2 = ee.ImageCollection(s2_sr_filter.median().set(
         "system:time_start", ee.Image(s2_sr_filter.first())
         .get("system:time_start")))
 
