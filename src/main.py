@@ -51,7 +51,7 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
                       'percentile_95': 'max'}, inplace=True)
 
     dfl = dfl.apply(lambda x: roundoff(x))
-    dfl.pH = dfl.pH.clip(0, 7)
+    dfl.pH = dfl.pH.apply(lambda x: x-1 if (x > 7) else x)
     if save_as_csv:
         dfl.to_csv(f"{path_csv}/{farmid}.csv")
 
@@ -75,6 +75,7 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     geometry = ee.FeatureCollection(x_pt.map(xcor(y_pt))).flatten()
 
     end_date = get_end_date(farm_path)
+    logger.info(f"end date: {end_date}")
     start_date = end_date - datetime.timedelta(days=30)
 
     predictor_bands = get_predictor_bands(geometry, start_date, end_date)
@@ -155,7 +156,7 @@ if __name__ == "__main__":
         #     break
         # from shapely import wkt
 
-        farm_path = "../output/client_wkt/test_new.csv"
+        farm_path = "../output/client_wkt/test_Siddappa.csv"
         main(farm_path, pixel_size, input_bands,
                         soil_nuts, save_path_tiff, save_path_csv)
         break
