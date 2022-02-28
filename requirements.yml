@@ -26,7 +26,7 @@ dependencies:
   - brotlipy=0.7.0
   - bzip2=1.0.8
   - c-ares=1.18.1
-  - ca-certificates=2021.10.8
+  - ca-certificates=2020.10.14
   - cachetools=4.2.4
   - cairo=1.16.0
   - certifi=2021.10.8
@@ -186,6 +186,7 @@ dependencies:
   - pycparser=2.21
   - pydantic=1.9.0
   - pygments=2.10.0
+  - pymysql=1.0.2
   - pyopenssl=21.0.0
   - pyparsing=3.0.6
   - pyproj=3.3.0
@@ -214,6 +215,7 @@ dependencies:
   - simplejson=3.17.6
   - six=1.16.0
   - snuggs=1.4.7
+  - sqlalchemy=1.4.27
   - sqlite=3.37.0
   - threadpoolctl=3.0.0
   - tiledb=2.5.3

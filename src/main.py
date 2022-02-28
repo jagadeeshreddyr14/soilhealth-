@@ -51,7 +51,7 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
                       'percentile_95': 'max'}, inplace=True)
 
     dfl = dfl.apply(lambda x: roundoff(x))
-    dfl.pH = dfl.pH.apply(lambda x: x-1 if (x > 7) else x)
+    # dfl.pH = dfl.pH.apply(lambda x: x-1 if (x > 7) else x)
     if save_as_csv:
         dfl.to_csv(f"{path_csv}/{farmid}.csv")
 
@@ -155,8 +155,8 @@ if __name__ == "__main__":
         # if i> 20:
         #     break
         # from shapely import wkt
-
-        farm_path = "../output/client_wkt/test_Siddappa.csv"
+        farm_path = "/data1/BKUP/micro_v2/s1_rvi/area/18242.csv"
+        # farm_path = "../output/client_wkt/test_Siddappa.csv"
         main(farm_path, pixel_size, input_bands,
                         soil_nuts, save_path_tiff, save_path_csv)
         break
