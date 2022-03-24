@@ -79,7 +79,13 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
 
     end_date = get_end_date(farm_path)
     logger.info(f"end date: {end_date}")
-    start_date = end_date - datetime.timedelta(days=30)
+
+    try:
+        start_date = end_date - datetime.timedelta(days=30)
+    except Exception as TypeError:
+        logger.info(f"{TypeError}")
+        return 
+
 
     predictor_bands = get_predictor_bands(geometry, start_date, end_date)
     df = getDataFrame(predictor_bands, pred_bands, geometry)
@@ -157,12 +163,12 @@ if __name__ == "__main__":
         
         #if i> 20:
 
-        farm_path = "/home/satyukt/Projects/1000/area/10680.csv"
+        # farm_path = "/home/satyukt/Projects/1000/area/10680.csv"
         main(farm_path, pixel_size, input_bands,
                         soil_nuts, save_path_tiff, save_path_csv)
     end = time.time()
 
-subprocess.call(["sh", "rsync_aws.sh"])
+# subprocess.call(["sh", "rsync_aws.sh"])
 
 print(end-start)
 
