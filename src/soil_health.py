@@ -171,15 +171,15 @@ if __name__ == "__main__":
     # Initialize the library.
     ee.Initialize()
     dirname = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(dirname)
+    x=os.chdir(dirname)
 
-    farm_id = 18529
-    farm_path = f'/data1/BKUP/micro_v2/s1_rvi/area/{farm_id}.csv'
+    farm_id = '20'
+    farm_path = f'/home/satyukt/Projects/1000/area/{farm_id}.csv'
     save_path_tiff = '../output/tif/'
     save_path_png = '../output/png/'
 
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
-
+    
     end_date = get_end_date(farm_id)
     start_date = end_date - datetime.timedelta(days=30)
 
@@ -205,6 +205,7 @@ if __name__ == "__main__":
         for nut, nut_slr in zip(glob.glob(f'../data/models/{i}.pkl'), glob.glob(f'../data/models/{i}*_slr.pkl')):
 
             predictions = genPredictions(nut, nut_slr, input)
+            print(predictions)
             df_pred['prediction'] = predictions
             df_out = pd.merge(df_tmp, df_pred, left_index=True,
                               right_index=True, how='left')['prediction']

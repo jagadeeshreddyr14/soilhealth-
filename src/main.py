@@ -8,6 +8,7 @@ import numpy as np
 from rasterio.transform import from_origin
 from zonalstats import get_zonal_stats
 import time
+import subprocess
 
 from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff
 from ndvi_barren import get_end_date, read_farm
@@ -59,13 +60,15 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
 
 
 def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv):
+    '''
+    main function we pass input farm in csv(polygon values)
+    '''
 
     farm_id = os.path.basename(farm_path).split(".")[0]
     save_csv_stats = os.path.join(path_csv, f"{farm_id}.csv")
 
     if os.path.exists(save_csv_stats):
-        logger.info(f"Farm CSV exists: {save_csv_stats}")
-        return None
+        return 
 
     if get_area(farm_path) < 150:
         return logger.error(f"Farm size small: {farm_path}")
@@ -147,19 +150,20 @@ if __name__ == "__main__":
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
     
-    default_path = '/data1/BKUP/micro_v2/s1_rvi/area/'
+    default_path = '/home/satyukt/Downloads/area/'
     farm_list = glob.glob(os.path.join(default_path, "[0-9]*.csv"))
 
     for i, farm_path in enumerate(farm_list):
         
-        # if i> 20:
-        #     break
-        # from shapely import wkt
-        farm_path = "/data1/BKUP/micro_v2/s1_rvi/area/18242.csv"
-        # farm_path = "../output/client_wkt/test_Siddappa.csv"
+        #if i> 20:
+
+        farm_path = "/home/satyukt/Projects/1000/area/10680.csv"
         main(farm_path, pixel_size, input_bands,
                         soil_nuts, save_path_tiff, save_path_csv)
-        break
     end = time.time()
 
-    print(end-start)
+subprocess.call(["sh", "rsync_aws.sh"])
+
+print(end-start)
+
+

@@ -1,6 +1,12 @@
 
-def maskS2clouds(image):
 
+
+def maskS2clouds(image):
+    '''
+    image is the input extracted from sentinal-2 dataset 
+    this function is to find whether image is covered with clouds and 
+    to do this calculation we use QA60 image from sentinal-2 dataset 
+    '''
     qa = image.select('QA60')
     cloudBitMask = 1 << 10
     cirrusBitMask = 1 << 11
@@ -25,6 +31,12 @@ def maskS2clouds(image):
 
 
 def addNDVI(image):
+    '''
+    this fuction is used to check whether the land is barren or not 
+    ndvi is extracted using band B8 and B4 
+    system:time_start is a property that when last time was passed 
+
+    '''
     ndvi_s = image.normalizedDifference(['B8', 'B4']).rename('NDVI')
     ndvi = ndvi_s.set("system:time_start", image.get("system:time_start"))
     return image.addBands(ndvi)
@@ -32,6 +44,9 @@ def addNDVI(image):
 
 
 def clipToCol(geometry):
+    '''
+    clip to geometry mentioned
+    '''
     def climage(image):
         return image.clipToCollection(geometry)
     return climage
@@ -39,6 +54,10 @@ def clipToCol(geometry):
 
 
 def masker(greenest, minest):
+    '''
+    here we are using decorator
+    using ndvi to mask forest area nearer to farm region 
+    '''
     def wrap(image):
             
         mask1 = greenest.select('NDVI').gt(0.3)

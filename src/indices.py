@@ -1,4 +1,7 @@
-
+'''
+This file is used to extract the other bands/
+using derived band
+'''
 def NDWI_function(image):
   NDWI = image.expression(
       '(B03-B08)/(B03+B08)', {

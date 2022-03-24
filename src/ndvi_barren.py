@@ -89,12 +89,13 @@ if __name__ == "__main__":
     ee.Initialize()
 
     dirname = os.path.dirname(os.path.abspath(__file__))
+    
     os.chdir(dirname)
 
     farm_id = 10973
     # end_date = get_end_date(farm_id)
     # print(end_date)
-    farm_path = f'/data1/BKUP/micro_v2/s1_rvi/area/{farm_id}.csv'
+    farm_path = f'/home/satyukt/Projects/1000/area/{farm_id}.csv'
 
     features = get_ee_Geometry(farm_path)
 
