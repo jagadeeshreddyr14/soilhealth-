@@ -167,7 +167,7 @@ if __name__ == "__main__":
                         soil_nuts, save_path_tiff, save_path_csv)
     end = time.time()
 
-subprocess.call(["sh", "rsync_aws.sh"])
+# subprocess.call(["sh", "rsync_aws.sh"])
 
 print(end-start)
 
