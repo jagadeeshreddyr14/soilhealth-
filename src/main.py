@@ -108,7 +108,6 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     format_zonal_stats(zonal_stats, farm_id, start_date,
                        path_csv, save_as_csv=True)
     logger.info(f"process complete for {farm_id}!")
-    # call(["rsync", "-avh", "--ignore-existing", "-e", "ssh", "/home/satyukt/Projects/1000/micro_v2/stat1/", "/data1/satyukt/Projects/1000/aws/stats"])
 
     return None
 
@@ -168,7 +167,7 @@ if __name__ == "__main__":
                         soil_nuts, save_path_tiff, save_path_csv)
     end = time.time()
 
-# subprocess.call(["sh", "rsync_aws.sh"])
+subprocess.call(["sh", "rsync_aws.sh"])
 
 print(end-start)
 
