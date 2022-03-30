@@ -68,7 +68,7 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     save_csv_stats = os.path.join(path_csv, f"{farm_id}.csv")
 
     if os.path.exists(save_csv_stats):
-        return 
+        return
 
     if get_area(farm_path) < 150:
         return logger.error(f"Farm size small: {farm_path}")
@@ -84,8 +84,7 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
         start_date = end_date - datetime.timedelta(days=30)
     except Exception as TypeError:
         logger.info(f"{TypeError}")
-        return 
-
+        return
 
     predictor_bands = get_predictor_bands(geometry, start_date, end_date)
     df = getDataFrame(predictor_bands, pred_bands, geometry)
@@ -94,11 +93,11 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     transform = from_origin(minx, maxy, pixel_size, pixel_size)
 
     for nut, nut_slr in soil_nutrients:
-        
+
         try:
             gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, path_tiff, transform,
                                  farm_id, len_y, len_x)
-                                                      
+
         except ValueError as e:
             logger.error(f"{e}")
             return
@@ -119,7 +118,7 @@ def get_path(param, fdr_name):
 
 
 def get_area(farm_path):
-    
+
     farm_poly = read_farm(farm_path).values[0]
     # specify a named ellipsoid: geodesic area
     geod = Geod(ellps="WGS84")
@@ -141,10 +140,10 @@ if __name__ == "__main__":
     model_path = '../data/models/'
     save_path_tiff = '../output/tif/'
     save_path_csv = '../output/csv/'
-    
+
     if not os.path.exists(save_path_tiff):
         os.makedirs(save_path_tiff)
-    
+
     if not os.path.exists(save_path_csv):
         os.makedirs(save_path_csv)
 
@@ -154,21 +153,21 @@ if __name__ == "__main__":
 
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
-    
-    default_path = '/home/satyukt/Downloads/area/'
+
+    default_path = '/home/satyukt/Projects/1000/area/'
     farm_list = glob.glob(os.path.join(default_path, "[0-9]*.csv"))
 
     for i, farm_path in enumerate(farm_list):
-        
-        #if i> 20:
 
-        # farm_path = "/home/satyukt/Projects/1000/area/10680.csv"
+        # if i> 20:
+
+        farm_path = "/home/satyukt/Projects/1000/area/24674.csv"
         main(farm_path, pixel_size, input_bands,
-                        soil_nuts, save_path_tiff, save_path_csv)
+             soil_nuts, save_path_tiff, save_path_csv)
+
     end = time.time()
+
 
 # subprocess.call(["sh", "rsync_aws.sh"])
 
 print(end-start)
-
-
