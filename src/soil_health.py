@@ -29,7 +29,7 @@ logger = MyLogger(module_name=__name__, filename="../logs/soil_health.log")
 def generate_points(farm_path, pixel_size):
 
     # read the farm
-    farm_poly = read_farm(farm_path, setcrs = True)
+    farm_poly = read_farm(farm_path, setcrs=True)
 
     # convert to geojson
     feature = farm_poly.__geo_interface__
@@ -106,9 +106,6 @@ def genPredictions(nut, nut_slr, input_var):
     return predictions
 
 
-
-
-
 # def get_png(nut, save_path_png, data_array, transform, farm_path, farm_id):
 
 #     file_name = os.path.basename(nut).split('.')[0]
@@ -143,11 +140,13 @@ def genPredictions(nut, nut_slr, input_var):
 #                     src.write(buf)
 
 
-def saveTiff(nut, save_path_tiff, data_array, transform, farm_id):
+def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
 
     file_name = os.path.basename(nut).split('.')[0]
     farm_dir = f"{save_path_tiff}/{farm_id}"
-    out_path = os.path.join(farm_dir, f"{file_name}.tif")
+    # farm_dir = f"{save_path_tiff}/{farm_id}-{start_date.date()}"
+    str_date = start_date.date().strftime("%Y%m%d")
+    out_path = os.path.join(farm_dir, f"{farm_id}_{str_date}_{file_name}.tif")
     options = {
         "driver": "Gtiff",
         "height": data_array.shape[0],
@@ -171,7 +170,7 @@ if __name__ == "__main__":
     # Initialize the library.
     ee.Initialize()
     dirname = os.path.dirname(os.path.abspath(__file__))
-    x=os.chdir(dirname)
+    x = os.chdir(dirname)
 
     farm_id = '20'
     farm_path = f'/home/satyukt/Projects/1000/area/{farm_id}.csv'
@@ -179,7 +178,7 @@ if __name__ == "__main__":
     save_path_png = '../output/png/'
 
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
-    
+
     end_date = get_end_date(farm_id)
     start_date = end_date - datetime.timedelta(days=30)
 

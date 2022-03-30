@@ -29,7 +29,7 @@ def roundoff(x):
         return x
 
 
-def gen_raster_save_tiff(nut, nut_slr, df_pred, df_temp, path_tiff, transform, farmid, leny, lenx):
+def gen_raster_save_tiff(nut, nut_slr, df_pred, df_temp, path_tiff, transform, farmid, leny, lenx, start_date):
 
     df_cpy = df_pred.copy()
     predictions = genPredictions(nut, nut_slr, df_cpy.values)
@@ -38,7 +38,7 @@ def gen_raster_save_tiff(nut, nut_slr, df_pred, df_temp, path_tiff, transform, f
                       right_index=True, how='left')['prediction']
     data_array = df_out.values.reshape(leny, lenx)
     data_array = np.flip(data_array, axis=0)
-    saveTiff(nut, path_tiff, data_array, transform, farmid)
+    saveTiff(nut, path_tiff, data_array, transform, farmid, start_date)
 
     return None
 
@@ -96,7 +96,7 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
 
         try:
             gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, path_tiff, transform,
-                                 farm_id, len_y, len_x)
+                                 farm_id, len_y, len_x, start_date)
 
         except ValueError as e:
             logger.error(f"{e}")
