@@ -168,6 +168,6 @@ if __name__ == "__main__":
     end = time.time()
 
 
-# subprocess.call(["sh", "rsync_aws.sh"])
+subprocess.call(["sh", "rsync_aws.sh"])
 
 print(end-start)
