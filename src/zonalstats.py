@@ -14,7 +14,8 @@ def get_zonal_stats(farm_path, raster_path):
     soil_nutrients = {}
     for raster_image in raster_images:
 
-        raster_filename=os.path.splitext(os.path.basename(raster_image))[0] 
+        raster_namedate = os.path.splitext(os.path.basename(raster_image))[0] 
+        raster_filename = ''.join(x for x in raster_namedate if x.isalpha())
         stats = zonal_stats(feat,raster_image,stats='median percentile_5 percentile_95', geojson_out=True, nodata = -999)
         raster_stats = [ i['properties'] for i in stats]
         soil_nutrients[raster_filename] = raster_stats[0]

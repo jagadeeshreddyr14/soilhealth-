@@ -161,11 +161,13 @@ if __name__ == "__main__":
 
         # if i> 20:
 
-        farm_path = "/home/satyukt/Projects/1000/area/24674.csv"
+        # farm_path = "/home/satyukt/Projects/1000/area/23180.csv"
         main(farm_path, pixel_size, input_bands,
              soil_nuts, save_path_tiff, save_path_csv)
 
+    
     end = time.time()
+
 
 
 subprocess.call(["sh", "rsync_aws.sh"])
