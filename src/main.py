@@ -84,6 +84,7 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     except Exception as e:
         logger.warning(f"farm file format is wrong: {farm_id}")
         return
+
     logger.info(f"process starting for = {farm_id}")
     x_pt, y_pt, minx, maxy = generate_points(farm_path, pixel_size)
     len_y, len_x = len(y_pt.getInfo()), len(x_pt.getInfo())
@@ -180,7 +181,7 @@ if __name__ == "__main__":
         # if i> 20:
         farm_id = os.path.basename(farm_path).split(".")[0]
 
-        # farm_path = "/home/satyukt/Projects/1000/area/10686.csv"
+        # farm_path = "/home/satyukt/Projects/1000/area/19226.csv"
         main(farm_path, pixel_size, input_bands,
              soil_nuts, save_path_tiff, save_path_csv)
 

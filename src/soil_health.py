@@ -162,7 +162,7 @@ def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
 
     with rs.open(out_path, 'w', **options) as src:
         src.write(data_array, 1)
-        logger.info(f"Raster saved to =     {farm_id}")
+        logger.info(f"Raster of {nut} = {farm_id}")
 
 
 if __name__ == "__main__":

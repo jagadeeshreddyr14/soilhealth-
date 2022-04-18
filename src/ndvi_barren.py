@@ -1,5 +1,6 @@
 import ee
 import pandas as pd
+from regex import E
 from ee_utils import addNDVI, maskS2clouds
 from shapely.geometry import mapping
 import geopandas as gpd
@@ -81,10 +82,16 @@ def get_end_date(farm_path):
     df_sm = df_sm[df_sm.SM > 0]
     df_sm.index = pd.to_datetime(df_sm.index, format='%Y-%m-%d')
     df_sm = df_sm.groupby(pd.Grouper(freq="M")).mean()['SM']
+    end_date = ''
     try:
         end_date = df_sm[df_sm < 0.4].last_valid_index()
     except Exception as e:
-        print('not less than')
+        end_date = df_sm[df_sm < 0.5].last_valid_index()
+
+    # end_date = df_sm[df_sm < 0.4].last_valid_index()
+
+    if not end_date:
+
         end_date = df_sm[df_sm < 0.5].last_valid_index()
 
     return end_date
