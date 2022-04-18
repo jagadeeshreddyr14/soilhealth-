@@ -59,6 +59,14 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
     return None
 
 
+def save_empty_csv(path_csv):
+
+    dfl = pd.DataFrame(columns=['K', 'N', 'P', 'OC', 'pH', 'date'], index=[
+                       'average', 'min', 'max'])
+
+    dfl.to_csv(path_csv)
+
+
 def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv):
     '''
     main function we pass input farm in csv(polygon values)
@@ -69,10 +77,14 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
 
     if os.path.exists(save_csv_stats):
         return
-
-    if get_area(farm_path) < 150:
-        return logger.error(f"Farm size small: {farm_path}")
-
+    try:
+        if get_area(farm_path) < 150:
+            save_empty_csv(save_csv_stats)
+            return logger.warning(f"Farm size small saving empty csv: {farm_path}")
+    except Exception as e:
+        logger.warning(f"farm file format is wrong: {farm_id}")
+        return
+    logger.info(f"process starting for = {farm_id}")
     x_pt, y_pt, minx, maxy = generate_points(farm_path, pixel_size)
     len_y, len_x = len(y_pt.getInfo()), len(x_pt.getInfo())
     geometry = ee.FeatureCollection(x_pt.map(xcor(y_pt))).flatten()
@@ -80,14 +92,16 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     end_date = get_end_date(farm_path)
     logger.info(f"end date: {end_date}")
 
-    try:
-        start_date = end_date - datetime.timedelta(days=30)
-    except Exception as TypeError:
-        logger.info(f"{TypeError}")
-        return
+    start_date = end_date - datetime.timedelta(days=30)
 
     predictor_bands = get_predictor_bands(geometry, start_date, end_date)
-    df = getDataFrame(predictor_bands, pred_bands, geometry)
+    try:
+        df = getDataFrame(predictor_bands, pred_bands, geometry)
+    except Exception as TypeError:
+        save_empty_csv(save_csv_stats)
+        logger.error(f"{TypeError}")
+        return
+
     df_tmp = df[["longitude", "latitude"]]
     df_pred = df.loc[df['NDWI'].notna(), pred_bands]
     transform = from_origin(minx, maxy, pixel_size, pixel_size)
@@ -98,9 +112,12 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
             gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, path_tiff, transform,
                                  farm_id, len_y, len_x, start_date)
 
-        except ValueError as e:
-            logger.error(f"{e}")
+        except Exception as e:
+            save_empty_csv(save_csv_stats)
+            logger.error(f"{e} saving empty csv")
             return
+
+        # try:
 
     zonal_stats = get_zonal_stats(farm_path, f"{path_tiff}/{farm_id}")
 
@@ -132,7 +149,8 @@ if __name__ == "__main__":
     dirname = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dirname)
 
-    logger = MyLogger(module_name=__name__, filename="../logs/soil_health.log")
+    logger = MyLogger(module_name=__name__,
+                      filename="../logs/soil_health.log")
 
     start = time.time()
     ee.Initialize()
@@ -160,16 +178,15 @@ if __name__ == "__main__":
     for i, farm_path in enumerate(farm_list):
 
         # if i> 20:
+        farm_id = os.path.basename(farm_path).split(".")[0]
 
-        # farm_path = "/home/satyukt/Projects/1000/area/23180.csv"
+        # farm_path = "/home/satyukt/Projects/1000/area/10686.csv"
         main(farm_path, pixel_size, input_bands,
              soil_nuts, save_path_tiff, save_path_csv)
 
-    
+        # exit()
     end = time.time()
 
 
-
 subprocess.call(["sh", "rsync_aws.sh"])
-
 print(end-start)
