@@ -60,7 +60,11 @@ def timeSeries(geometry, fname):
 
 def get_end_date(farm_path):
 
-    features = get_ee_Geometry(farm_path)
+    try:
+
+        features = get_ee_Geometry(farm_path)
+    except Exception as e:
+        return
 
     start_date = ee.Date(datetime.datetime.now() -
                          datetime.timedelta(days=360))
@@ -83,16 +87,18 @@ def get_end_date(farm_path):
     df_sm.index = pd.to_datetime(df_sm.index, format='%Y-%m-%d')
     df_sm = df_sm.groupby(pd.Grouper(freq="M")).mean()['SM']
     end_date = ''
-    try:
+    if df_sm[df_sm < 0.4].last_valid_index():
         end_date = df_sm[df_sm < 0.4].last_valid_index()
-    except Exception as e:
+    elif df_sm[df_sm < 0.5].last_valid_index():
         end_date = df_sm[df_sm < 0.5].last_valid_index()
+    else:
+        end_date = ''
 
-    # end_date = df_sm[df_sm < 0.4].last_valid_index()
+    # # end_date = df_sm[df_sm < 0.4].last_valid_index()
 
-    if not end_date:
+    # if not end_date:
 
-        end_date = df_sm[df_sm < 0.5].last_valid_index()
+    #     end_date = df_sm[df_sm < 0.5].last_valid_index()
 
     return end_date
 
