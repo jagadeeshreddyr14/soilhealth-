@@ -6,6 +6,7 @@ from shapely.geometry import mapping
 import geopandas as gpd
 import os
 import datetime
+import configparser
 
 
 def read_farm(farm_path, setcrs=False):
@@ -61,7 +62,6 @@ def timeSeries(geometry, fname):
 def get_end_date(farm_path):
 
     try:
-
         features = get_ee_Geometry(farm_path)
     except Exception as e:
         return
@@ -87,18 +87,11 @@ def get_end_date(farm_path):
     df_sm.index = pd.to_datetime(df_sm.index, format='%Y-%m-%d')
     df_sm = df_sm.groupby(pd.Grouper(freq="M")).mean()['SM']
     end_date = ''
+
     if df_sm[df_sm < 0.4].last_valid_index():
         end_date = df_sm[df_sm < 0.4].last_valid_index()
-    elif df_sm[df_sm < 0.5].last_valid_index():
-        end_date = df_sm[df_sm < 0.5].last_valid_index()
     else:
         end_date = ''
-
-    # # end_date = df_sm[df_sm < 0.4].last_valid_index()
-
-    # if not end_date:
-
-    #     end_date = df_sm[df_sm < 0.5].last_valid_index()
 
     return end_date
 
@@ -112,9 +105,11 @@ if __name__ == "__main__":
     os.chdir(dirname)
 
     farm_id = 10973
-    # end_date = get_end_date(farm_id)
-    # print(end_date)
-    farm_path = f'/home/satyukt/Projects/1000/area/{farm_id}.csv'
+    config = configparser.ConfigParser()
+    config.read('../Config/config.ini')
+
+    area_path = config['Default']['area_path']
+    farm_path = f'{area_path}{farm_id}.csv'
 
     features = get_ee_Geometry(farm_path)
 

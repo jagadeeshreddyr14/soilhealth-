@@ -9,12 +9,13 @@ from rasterio.transform import from_origin
 from zonalstats import get_zonal_stats
 import time
 import subprocess
+from subprocess import call
+from pyproj import Geod
+import configparser
 
 from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff
 from ndvi_barren import get_end_date, read_farm
-
-from subprocess import call
-from pyproj import Geod
+from _create_png import create_png
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -55,6 +56,7 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
     # dfl.pH = dfl.pH.apply(lambda x: x-1 if (x > 7) else x)
     if save_as_csv:
         dfl.to_csv(f"{path_csv}/{farmid}.csv")
+    logger.info(f'save output csv {farmid}')
 
     return None
 
@@ -67,22 +69,40 @@ def save_empty_csv(path_csv):
     dfl.to_csv(path_csv)
 
 
-def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv):
+def main(farm_path, client_info, pixel_size, pred_bands, soil_nutrients, nuts_ranges, path_tiff, path_png,
+         path_csv):
     '''
     main function we pass input farm in csv(polygon values)
     '''
 
     farm_id = os.path.basename(farm_path).split(".")[0]
     save_csv_stats = os.path.join(path_csv, f"{farm_id}.csv")
+    save_path_tiff = os.path.join(path_tiff, f"{farm_id}")
+    save_path_png = os.path.join(path_png, f"{farm_id}")
 
     if os.path.exists(save_csv_stats):
         return
+
+    # checking crop type
+    not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
+    client_data = pd.read_csv(client_info)
+    try:
+        farm_crop = list(client_data.loc[(client_data['polygon_id'] ==
+                                          int(farm_id))]['croptype'])[0]
+
+    except:
+        farm_crop = ''
+        pass
+
+    if farm_crop in not_crop:
+        return
+
     try:
         if get_area(farm_path) < 150:
-            save_empty_csv(save_csv_stats)
+
             return logger.warning(f"Farm size small saving empty csv: {farm_path}")
     except Exception as e:
-        logger.warning(f"farm file format is wrong: {farm_id}")
+        logger.error(f"farm file format is wrong: {farm_id}")
         return
 
     logger.info(f"process starting for = {farm_id}")
@@ -91,11 +111,10 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     geometry = ee.FeatureCollection(x_pt.map(xcor(y_pt))).flatten()
 
     end_date = get_end_date(farm_path)
-    # logger.info(f"end date: {end_date}")
+
     try:
         start_date = end_date - datetime.timedelta(days=30)
     except Exception as TypeError:
-        save_empty_csv(save_csv_stats)
         logger.error(f"{TypeError}")
         return
 
@@ -103,7 +122,6 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     try:
         df = getDataFrame(predictor_bands, pred_bands, geometry)
     except Exception as TypeError:
-        save_empty_csv(save_csv_stats)
         logger.error(f"{TypeError}")
         return
 
@@ -114,17 +132,19 @@ def main(farm_path, pixel_size, pred_bands, soil_nutrients, path_tiff, path_csv)
     for nut, nut_slr in soil_nutrients:
 
         try:
-            gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, path_tiff, transform,
+            gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, save_path_tiff, transform,
                                  farm_id, len_y, len_x, start_date)
 
         except Exception as e:
             save_empty_csv(save_csv_stats)
-            logger.error(f"{e} saving empty csv")
+            logger.error(f"{e} ")
             return
+    logger.info(f"Raster generated for {farm_id}")
+    # create png
+    create_png(farm_path, save_path_tiff, nuts_ranges, save_path_png)
+    logger.info(f'png generated for {farm_id}')
 
-        # try:
-
-    zonal_stats = get_zonal_stats(farm_path, f"{path_tiff}/{farm_id}")
+    zonal_stats = get_zonal_stats(farm_path, save_path_tiff)
 
     format_zonal_stats(zonal_stats, farm_id, start_date,
                        path_csv, save_as_csv=True)
@@ -151,24 +171,44 @@ def get_area(farm_path):
 
 if __name__ == "__main__":
 
+    start = time.time()
+
     dirname = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dirname)
 
     logger = MyLogger(module_name=__name__,
                       filename="../logs/soil_health.log")
 
-    start = time.time()
     ee.Initialize()
 
-    model_path = '../data/models/'
-    save_path_tiff = '../output/tif/'
-    save_path_csv = '../output/csv/'
+    config = configparser.ConfigParser()
+    config.read('../Config/config.ini')
 
-    if not os.path.exists(save_path_tiff):
-        os.makedirs(save_path_tiff)
+    area_path = config['Default']['area_path']
+    model_path = config['Default']['model_path']
 
-    if not os.path.exists(save_path_csv):
-        os.makedirs(save_path_csv)
+    path_tiff = config['Output_path']['path_tiff']
+    path_csv = config['Output_path']['path_csv']
+    path_png = config['Output_path']['path_png']
+
+    client_info = config['aws']['client_info']
+
+    if not os.path.exists(path_tiff):
+        os.makedirs(path_tiff)
+
+    if not os.path.exists(path_csv):
+        os.makedirs(path_csv)
+
+    if not os.path.exists(path_png):
+        os.makedirs(path_png)
+
+    nuts_ranges = {
+        'N': (100, 300),
+        'P': (5, 50),
+        'K': (100, 250),
+        'pH': (6, 8.5),
+        'OC': (0.3, 0.75)
+    }
 
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
     input_bands = ['B8', 'B4', 'B5', 'B11', 'B9', 'B1',
@@ -177,21 +217,19 @@ if __name__ == "__main__":
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
 
-    default_path = '/home/satyukt/Projects/1000/area/'
-    farm_list = glob.glob(os.path.join(default_path, "[0-9]*.csv"))
+    farm_list = glob.glob(os.path.join(area_path, "[0-9]*.csv"))
 
     for i, farm_path in enumerate(farm_list):
 
-        # if i> 20:
-        farm_id = os.path.basename(farm_path).split(".")[0]
+        # if i < 60:
 
-        # farm_path = "/home/satyukt/Projects/1000/area/22412.csv"
-        main(farm_path, pixel_size, input_bands,
-             soil_nuts, save_path_tiff, save_path_csv)
+        # farm_path = "/home/satyukt/Projects/1000/area/24888.csv"
+        main(farm_path, client_info, pixel_size, input_bands,
+             soil_nuts, nuts_ranges, path_tiff, path_png, path_csv)
 
         # exit()
     end = time.time()
 
 
-subprocess.call(["sh", "rsync_aws.sh"])
+# subprocess.call(["sh", "rsync_aws.sh"])
 print(end-start)

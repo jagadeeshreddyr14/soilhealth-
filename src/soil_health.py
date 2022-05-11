@@ -9,8 +9,8 @@ import datetime
 import rasterio as rs
 import os
 from rasterio.transform import from_origin
-# from rasterio.io import MemoryFile
-# from rio_tiler.io import COGReader
+import configparser
+
 
 from indices import NDWI_function,  NDVI_function, NDVI_G_function, SR_n2_function, SR_N_function, TBVI1_function
 from ee_utils import addNDVI, clipToCol, maskS2clouds, masker
@@ -106,47 +106,13 @@ def genPredictions(nut, nut_slr, input_var):
     return predictions
 
 
-# def get_png(nut, save_path_png, data_array, transform, farm_path, farm_id):
-
-#     file_name = os.path.basename(nut).split('.')[0]
-#     farm_dir = f"{save_path_png}/{farm_id}"
-
-#     options = {
-#         "driver": "GTiff",
-#         "height": data_array.shape[0],
-#         "width": data_array.shape[1],
-#         "count": 1,
-#         "dtype": np.float32,
-#         "crs": 'EPSG:4326',
-#         "transform": transform,
-#     }
-
-#     with MemoryFile() as memfile:
-#         with memfile.open(**options) as dataset:
-
-#             dataset.write(data_array, 1)
-
-#         with memfile.open() as src:
-
-#             with COGReader(src.name) as cog:
-#                 feat = get_py_geometry(farm_path)
-#                 img = cog.feature(feat)
-#                 buf = img.render(img_format="png")
-
-#                 if not os.path.exists(farm_dir):
-#                     os.mkdir(farm_dir)
-
-#                 with open(f"{farm_dir}/{file_name}.png", 'wb') as src:
-#                     src.write(buf)
-
-
 def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
 
     file_name = os.path.basename(nut).split('.')[0]
-    farm_dir = f"{save_path_tiff}/{farm_id}"
-    # farm_dir = f"{save_path_tiff}/{farm_id}-{start_date.date()}"
+    # farm_dir = f"{save_path_tiff}/{farm_id}"
     str_date = start_date.date().strftime("%Y%m%d")
-    out_path = os.path.join(farm_dir, f"{farm_id}_{str_date}_{file_name}.tif")
+    out_path = os.path.join(
+        save_path_tiff, f"{farm_id}_{str_date}_{file_name}.tif")
     options = {
         "driver": "Gtiff",
         "height": data_array.shape[0],
@@ -157,12 +123,11 @@ def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
         "transform": transform
     }
 
-    if not os.path.exists(farm_dir):
-        os.mkdir(farm_dir)
+    if not os.path.exists(save_path_tiff):
+        os.mkdir(save_path_tiff)
 
     with rs.open(out_path, 'w', **options) as src:
         src.write(data_array, 1)
-        logger.info(f"Raster of {nut} = {farm_id}")
 
 
 if __name__ == "__main__":
@@ -172,10 +137,17 @@ if __name__ == "__main__":
     dirname = os.path.dirname(os.path.abspath(__file__))
     x = os.chdir(dirname)
 
+    config = configparser.ConfigParser()
+    config.read('../Config/config.ini')
+
+    area_path = config['Default']['area_path']
+    model_path = config['Default']['model_path']
+
+    save_path_tiff = config['Output_path']['path_tiff']
+    save_path_png = config['Output_path']['path_png']
+
     farm_id = '20'
-    farm_path = f'/home/satyukt/Projects/1000/area/{farm_id}.csv'
-    save_path_tiff = '../output/tif/'
-    save_path_png = '../output/png/'
+    farm_path = f'{area_path}{farm_id}.csv'
 
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
 
