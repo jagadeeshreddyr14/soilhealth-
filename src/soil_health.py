@@ -118,7 +118,7 @@ def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
         "height": data_array.shape[0],
         "width": data_array.shape[1],
         "count": 1,
-        "dtype": np.float32,
+        "dtype": np.float64,  # float632
         "crs": 'EPSG:4326',
         "transform": transform
     }

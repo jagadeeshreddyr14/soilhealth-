@@ -12,6 +12,8 @@ import subprocess
 from subprocess import call
 from pyproj import Geod
 import configparser
+import cProfile
+import rpy2.robjects as robjects
 
 from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff
 from ndvi_barren import get_end_date, read_farm
@@ -53,7 +55,9 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
                       'percentile_95': 'max'}, inplace=True)
 
     dfl = dfl.apply(lambda x: roundoff(x))
-    # dfl.pH = dfl.pH.apply(lambda x: x-1 if (x > 7) else x)
+    # subtracting ph by -0.5
+    dfl.loc[:, "pH"] = dfl["pH"].apply(lambda x: x - 0.5)
+
     if save_as_csv:
         dfl.to_csv(f"{path_csv}/{farmid}.csv")
     logger.info(f'save output csv {farmid}')
@@ -79,31 +83,30 @@ def main(farm_path, client_info, pixel_size, pred_bands, soil_nutrients, nuts_ra
     save_csv_stats = os.path.join(path_csv, f"{farm_id}.csv")
     save_path_tiff = os.path.join(path_tiff, f"{farm_id}")
     save_path_png = os.path.join(path_png, f"{farm_id}")
-
     if os.path.exists(save_csv_stats):
-        return
+        return logger.info('csv exists')
 
+    ##########
     # checking crop type
-    not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
+    not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado']
     client_data = pd.read_csv(client_info)
     try:
         farm_crop = list(client_data.loc[(client_data['polygon_id'] ==
                                           int(farm_id))]['croptype'])[0]
-
     except:
         farm_crop = ''
         pass
 
     if farm_crop in not_crop:
         return
+    ##########
 
+    # area in meter^2
     try:
         if get_area(farm_path) < 150:
-
-            return logger.warning(f"Farm size small saving empty csv: {farm_path}")
+            return logger.info(f"{farm_id} = Farm size small: {get_area(farm_path)}")
     except Exception as e:
-        logger.error(f"farm file format is wrong: {farm_id}")
-        return
+        return logger.error(f"{e} {farm_id}")
 
     logger.info(f"process starting for = {farm_id}")
     x_pt, y_pt, minx, maxy = generate_points(farm_path, pixel_size)
@@ -114,16 +117,14 @@ def main(farm_path, client_info, pixel_size, pred_bands, soil_nutrients, nuts_ra
 
     try:
         start_date = end_date - datetime.timedelta(days=30)
-    except Exception as TypeError:
-        logger.error(f"{TypeError}")
-        return
+    except TypeError as e:
+        return logger.error(f"{e}")
 
     predictor_bands = get_predictor_bands(geometry, start_date, end_date)
     try:
         df = getDataFrame(predictor_bands, pred_bands, geometry)
-    except Exception as TypeError:
-        logger.error(f"{TypeError}")
-        return
+    except TypeError as e:
+        return logger.error(f"{e}")
 
     df_tmp = df[["longitude", "latitude"]]
     df_pred = df.loc[df['NDWI'].notna(), pred_bands]
@@ -134,15 +135,11 @@ def main(farm_path, client_info, pixel_size, pred_bands, soil_nutrients, nuts_ra
         try:
             gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, save_path_tiff, transform,
                                  farm_id, len_y, len_x, start_date)
-
         except Exception as e:
-            save_empty_csv(save_csv_stats)
-            logger.error(f"{e} ")
-            return
-    logger.info(f"Raster generated for {farm_id}")
+            return logger.error(f"{e} ")
+
     # create png
-    create_png(farm_path, save_path_tiff, nuts_ranges, save_path_png)
-    logger.info(f'png generated for {farm_id}')
+    create_png(farm_path, farm_id, save_path_tiff, nuts_ranges, save_path_png)
 
     zonal_stats = get_zonal_stats(farm_path, save_path_tiff)
 
@@ -186,7 +183,6 @@ if __name__ == "__main__":
 
     area_path = config['Default']['area_path']
     model_path = config['Default']['model_path']
-
     path_tiff = config['Output_path']['path_tiff']
     path_csv = config['Output_path']['path_csv']
     path_png = config['Output_path']['path_png']
@@ -206,7 +202,7 @@ if __name__ == "__main__":
         'N': (100, 300),
         'P': (5, 50),
         'K': (100, 250),
-        'pH': (6, 8.5),
+        'pH': (5.5, 8.0),
         'OC': (0.3, 0.75)
     }
 
@@ -216,20 +212,23 @@ if __name__ == "__main__":
 
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
-
-    farm_list = glob.glob(os.path.join(area_path, "[0-9]*.csv"))
+    # path_csv = '/home/satyukt/Desktop/myfiles/soil_health/75/'
+    # area_path = '/home/satyukt/Desktop/myfiles/soil/area/'
+    farm_list = glob.glob(os.path.join(area_path, "*.csv"))
 
     for i, farm_path in enumerate(farm_list):
 
-        # if i < 60:
+        farm_path = f"/home/satyukt/Projects/1000/area/26357.csv"
 
-        # farm_path = "/home/satyukt/Projects/1000/area/24888.csv"
-        main(farm_path, client_info, pixel_size, input_bands,
-             soil_nuts, nuts_ranges, path_tiff, path_png, path_csv)
+        try:
+            main(farm_path, client_info, pixel_size, input_bands,
+                 soil_nuts, nuts_ranges, path_tiff, path_png, path_csv)
+        except Exception as e:
+            logger.warning(
+                f'{os.path.basename(farm_path).split(".")[0]} {e}')
 
-        # exit()
-    end = time.time()
-
+        end = time.time()
+        print(end-start)
+        exit()
 
 # subprocess.call(["sh", "rsync_aws.sh"])
-print(end-start)

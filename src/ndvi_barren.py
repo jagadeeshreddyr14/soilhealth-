@@ -65,7 +65,16 @@ def get_end_date(farm_path):
         features = get_ee_Geometry(farm_path)
     except Exception as e:
         return
+    '''
+    # date = datetime.datetime.strptime('1-06-2022', "%d-%m-%Y")
 
+    # day = 5
+    # start = date - datetime.timedelta(days=day)
+    # end = date + datetime.timedelta(days=day)
+
+    # start_date = ee.Date(start)
+    # current_date = ee.Date(end)
+    '''
     start_date = ee.Date(datetime.datetime.now() -
                          datetime.timedelta(days=360))
     current_date = ee.Date(datetime.datetime.now() -
@@ -85,7 +94,7 @@ def get_end_date(farm_path):
     df_sm = pd.DataFrame(sm_info)
     df_sm = df_sm[df_sm.SM > 0]
     df_sm.index = pd.to_datetime(df_sm.index, format='%Y-%m-%d')
-    df_sm = df_sm.groupby(pd.Grouper(freq="M")).mean()['SM']
+    # df_sm = df_sm.groupby(pd.Grouper(freq="M")).mean()['SM']
     end_date = ''
 
     if df_sm[df_sm < 0.4].last_valid_index():
