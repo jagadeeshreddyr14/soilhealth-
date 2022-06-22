@@ -10,6 +10,7 @@ def get_zonal_stats(farm_path, raster_path):
 
     feat = get_py_geometry(farm_path)
     raster_images = glob(f"{raster_path}/*")
+    # raster_images = glob(f"/home/satyukt/Projects/1000/soil_health/output/sat2credit/tif/1616/*")
     soil_nutrients = {}
     for raster_image in raster_images:
 
