@@ -122,9 +122,9 @@ def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
         "crs": 'EPSG:4326',
         "transform": transform
     }
-
-    if not os.path.exists(save_path_tiff):
-        os.mkdir(save_path_tiff)
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    # if not os.path.exists(save_path_tiff):
+    #     os.mkdir(save_path_tiff)
 
     with rs.open(out_path, 'w', **options) as src:
         src.write(data_array, 1)

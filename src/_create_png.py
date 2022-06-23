@@ -10,11 +10,11 @@ import datetime
 import numpy as np
 from scipy import ndimage
 
-'''fill empty pixels in tiff'''
 
 import matplotlib.pyplot as plt
 # This Fucntion will take fifth element and replace it with the Median Values
 
+'''fill empty pixels in tiff'''
 
 def convolve_mapping(x):
     if np.isnan(x[4]) and not np.isnan(np.delete(x, 4)).all():

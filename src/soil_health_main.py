@@ -1,3 +1,4 @@
+from regex import E
 from logs import MyLogger
 import ee
 import glob
@@ -16,6 +17,8 @@ import configparser
 from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff
 from ndvi_barren import get_end_date, read_farm
 from _create_png import create_png
+from subprocess import call,Popen,PIPE
+import atexit
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -54,6 +57,7 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
 
     dfl = dfl.apply(lambda x: roundoff(x))
     # dfl.pH = dfl.pH.apply(lambda x: x-1 if (x > 7) else x)
+    os.makedirs(os.path.dirname(path_csv), exist_ok=True)
     if save_as_csv:
         dfl.to_csv(f"{path_csv}/{farmid}.csv")
     logger.info(f'save output csv {farmid}')
@@ -69,8 +73,8 @@ def save_empty_csv(path_csv):
     dfl.to_csv(path_csv)
 
 
-def compute_soil_health(farm_path, client_info, pixel_size, pred_bands, soil_nutrients, nuts_ranges, path_tiff, path_png = None,
-         path_csv = None):
+def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_ranges, path_tiff, path_png=None,
+                        path_csv=None, client_info=None):
 
     global logger
     logger = MyLogger(module_name=__name__,
@@ -80,16 +84,15 @@ def compute_soil_health(farm_path, client_info, pixel_size, pred_bands, soil_nut
     '''
 
     farm_id = os.path.basename(farm_path).split(".")[0]
-    
+
     save_path_tiff = os.path.join(path_tiff, f"{farm_id}")
-    
+
     if path_csv:
         save_csv_stats = os.path.join(path_csv, f"{farm_id}.csv")
         process_csv = True
     else:
         process_csv = False
-    
-    
+
     if path_png:
         save_path_png = os.path.join(path_png, f"{farm_id}")
         process_png = True
@@ -97,21 +100,24 @@ def compute_soil_health(farm_path, client_info, pixel_size, pred_bands, soil_nut
         process_png = False
 
     if os.path.exists(save_csv_stats):
+        print('file exists')
         return
-    
-    # checking crop type
-    # not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
-    # client_data = pd.read_csv(client_info)
-    # # try:
-    # #     farm_crop = list(client_data.loc[(client_data['polygon_id'] ==
-    # #                                       int(farm_id))]['croptype'])[0]
 
-    # except:
-    #     farm_crop = ''
-    # #     pass
+    # checking crop type and client id 
+    if client_info:
+        not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
+        client_data = pd.read_csv(client_info)
+        try:
+            farm_crop = list(client_data.loc[(client_data['polygon_id'] ==
+                                              int(farm_id))]['croptype'])[0]
 
-    # if farm_crop in not_crop:
-    #     return
+        except:
+            farm_crop = ''
+            pass
+
+        if farm_crop in not_crop:
+            return
+        # id_client = client_data[(client_data['polygon_id']==int(farm_id))]['client_id'].values[0]
 
     try:
         if get_area(farm_path) < 150:
@@ -142,6 +148,7 @@ def compute_soil_health(farm_path, client_info, pixel_size, pred_bands, soil_nut
     df_pred = df.loc[df['NDWI'].notna(), pred_bands]
     transform = from_origin(minx, maxy, pixel_size, pixel_size)
 
+    '''Generating raster(tiff)'''
     for nut, nut_slr in soil_nutrients:
 
         try:
@@ -155,19 +162,29 @@ def compute_soil_health(farm_path, client_info, pixel_size, pred_bands, soil_nut
             logger.error(f"{e} ")
             return
     logger.info(f"Raster generated for {farm_id}")
-    # create png
+    
+    '''Generating PNG'''
     if process_png:
-        
-        create_png(farm_path, farm_id,save_path_tiff, nuts_ranges, save_path_png)
+
+        create_png(farm_path, farm_id, save_path_tiff,
+                   nuts_ranges, save_path_png)
         logger.info(f'png generated for {farm_id}')
+        
+    '''Generating CSV(NPK)'''
     if process_csv:
         zonal_stats = get_zonal_stats(farm_path, save_path_tiff)
         format_zonal_stats(zonal_stats, farm_id, start_date,
-                                   path_csv, save_as_csv=True)
+                           path_csv, save_as_csv=True)
     logger.info(f"process complete for {farm_id}!")
 
-    return None
+    '''Generating report'''
+    
+    proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/new_script.r %s" %(farm_id)], shell=True,stdout=PIPE)
+    proc.communicate()
+    atexit.register(proc.terminate)
+    pid = proc.pid
 
+    return None
 
 def get_path(param, fdr_name):
     nnut = glob.glob(f"{model_path + fdr_name[0]}/{param}*.pkl")[0]
@@ -204,7 +221,7 @@ if __name__ == "__main__":
     path_csv = config['Output_path']['path_csv']
     path_png = config['Output_path']['path_png']
 
-    # client_info = config['aws']['client_info']
+    client_info = config['aws']['client_info']
 
     if not os.path.exists(path_tiff):
         os.makedirs(path_tiff)
@@ -230,21 +247,19 @@ if __name__ == "__main__":
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
 
-    client_info = None
-
-    # area_path = "/home/satyukt/Downloads/soil_test_pilot_shapefiles/wkt/"
+    # area_path = "/home/satyukt/Desktop/myfiles/soil/create_wkt/area/"
     farm_list = glob.glob(os.path.join(area_path, "*.csv"))
     for i, farm_path in enumerate(farm_list):
 
+        # farm_path = "/home/satyukt/Projects/1000/area/25355.csv"
+        farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
+        try:
+            compute_soil_health(farm_path, pixel_size, input_bands,
+                                soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info)
+        except Exception as e:
+            print(e)
+            
 
-        # farm_path = "/home/satyukt/Projects/1000/area/1616.csv"
-        farm_path = "/home/satyukt/Projects/1000/sat2credit/area/1033.csv"
-        compute_soil_health(farm_path, client_info, pixel_size, input_bands,
-             soil_nuts, nuts_ranges, path_tiff, path_png, path_csv)
-
-        exit()
+    subprocess.call(["sh", "rsync_aws.sh"])
     end = time.time()
-
-
-# subprocess.call(["sh", "rsync_aws.sh"])
-# print(end-start)
+    print(end-start)

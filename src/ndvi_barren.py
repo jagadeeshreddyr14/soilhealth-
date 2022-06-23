@@ -76,7 +76,7 @@ def get_end_date(farm_path):
     # current_date = ee.Date(end)
     '''
     start_date = ee.Date(datetime.datetime.now() -
-                         datetime.timedelta(days=360))
+                         datetime.timedelta(days=300))
     current_date = ee.Date(datetime.datetime.now() -
                            datetime.timedelta(days=0))
 

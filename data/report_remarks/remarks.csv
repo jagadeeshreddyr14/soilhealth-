@@ -1,0 +1,18 @@
+Cases,Generic Remarks
+N - Low,"The Nitrogen content of the field is lower than normal. Additional nitrogen applied at split intervals would improve the crop's use efficiency of nitrogen, and also the yield of the crop."
+N - Normal,The Nitrogen content in the field is within the normal range.
+N - High,The Nitrogen content in the field is above the normal. This can be corrected by crop rotation with crops that are heavy nitrogen feeding or mulching with sawdust/woodchips which help in absorbing and soaking up excess nitrogen in the soil.
+P - Low,"The phosphorus content in the field is below normal. Therefore, adding green manure residues/composted manure/Bone meal which can increase soil mineralization rates of phosphorus."
+P - Normal,The amount of phosphorus in the field is within standard range.
+P - High,The amount of phosphorus in the field is above normal and can be corrected by avoiding phosphorus application (following season) organic composts.
+K - Low,Potassium content in the field is low and can be fixed by adding muriate of potash or sulfate of potash. It can also be corrected by organic sources such as wood ash and kelp/seaweed available in markets. 
+K - Normal,The Potassium content over the field is in the normal range.
+K - High,"The potassium content in the field is above normal range. This can be corrected by ploughing and loosening the soil, fully irrigate the field with proper drainage to dissolve and flush out surplus potassium before sowing. Also avoid potassium-rich fertilizers."
+OC - Low,"The amount of soil organic carbon is low and can be fixed by increasing cropping intensity, which helps to improve organic matter returns to the soil, by growing high biomass crops and pastures. It can also be managed by increasing organic inputs to the soil."
+OC - Normal,The amount of soil organic carbon in the field is within standard range.
+OC - High,The amount of soil organic carbon in the field is above normal. This can be fixed by reducing organic inputs to the soil.
+pH - < 5.5,Strongly Acidic soil. The application of lime neutralizes soil acidity.
+pH - 5.6-6.5,"Moderately Acidic soil. Recommendation depends on the soil and its type, region, water availability, previous crops, and the next crop in the field. Please contact our team for further action. "
+pH - 6.6-7.0,"Slightly Acidic soil. Recommendation depends on the soil and its type, region, water availability, previous crops, and the next crop in the field. Please contact our team for further action. "
+pH - 7.1-8.5,"Moderately Alkaline soil. This can be reduced by leaching (irrigating the field prior to land preparation with proper drainage). Recommendation depends on the soil and its type, region, water availability, previous crops, and the next crop in the field. Please contact our team for further action. "
+pH - > 8.5,Strongly Alkaline soil. This can be fixed by leaching (irrigating the field prior to land preparation with proper drainage).
