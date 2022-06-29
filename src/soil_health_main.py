@@ -99,9 +99,9 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     else:
         process_png = False
 
-    if os.path.exists(save_csv_stats):
-        print('file exists')
-        return
+    # if os.path.exists(save_csv_stats):
+        # print('file exists')
+        # return
 
     # checking crop type and client id 
     if client_info:
@@ -221,8 +221,8 @@ if __name__ == "__main__":
     path_csv = config['Output_path']['path_csv']
     path_png = config['Output_path']['path_png']
 
-    client_info = config['aws']['client_info']
-
+    # client_info = config['aws']['client_info']
+    client_info = None
     if not os.path.exists(path_tiff):
         os.makedirs(path_tiff)
 
@@ -247,19 +247,20 @@ if __name__ == "__main__":
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
 
-    # area_path = "/home/satyukt/Desktop/myfiles/soil/create_wkt/area/"
+    # area_path = "/home/satyukt/Desktop/Manish/wkt_to_shp/create_wkt/area/"
     farm_list = glob.glob(os.path.join(area_path, "*.csv"))
     for i, farm_path in enumerate(farm_list):
 
-        # farm_path = "/home/satyukt/Projects/1000/area/25355.csv"
-        farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
+        farm_path = "/home/satyukt/Projects/1000/area/30655.csv"
+        # farm_path = "/home/satyukt/Projects/1000/sat2credit/area/30315.csv"
+        # farm_path = '/home/satyukt/Desktop/Manish/wkt_to_shp/create_wkt/area/*.csv'
         try:
             compute_soil_health(farm_path, pixel_size, input_bands,
                                 soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info)
         except Exception as e:
             print(e)
-            
+        exit()    
 
-    subprocess.call(["sh", "rsync_aws.sh"])
+    # subprocess.call(["sh", "rsync_aws.sh"])
     end = time.time()
     print(end-start)
