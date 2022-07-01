@@ -15,8 +15,8 @@ def uploadfile(localpath, s3path):
 
 if __name__ == "__main__":
 
-    local_path = '/home/satyukt/Desktop/myfiles/soil/report/30257.pdf'
+    local_path = '/home/satyukt/Projects/1000/soil_health/output/Report/30354.pdf'
 
-    s3path = 'sat2farm/17309/30257/soilReportPDF/30257.pdf'
+    s3path = 'sat2farm/16703/30354/soilReportPDF/30354.pdf'
 
     uploadfile(local_path, s3path)
