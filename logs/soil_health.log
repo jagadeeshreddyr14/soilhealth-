@@ -119,3 +119,7 @@
 {"time":"2022-07-01 10:36:02,824", "module":"__main__", "line_no":178, "level":"INFO", "msg":"png generated for 30807"},
 {"time":"2022-07-01 10:36:02,852", "module":"__main__", "line_no":65, "level":"INFO", "msg":"save output csv 30807"},
 {"time":"2022-07-01 10:36:02,852", "module":"__main__", "line_no":185, "level":"INFO", "msg":"process complete for 30807!"},
+{"time":"2022-07-01 11:04:48,964", "module":"__main__", "line_no":171, "level":"INFO", "msg":"Raster generated for 30807"},
+{"time":"2022-07-01 11:04:49,746", "module":"__main__", "line_no":178, "level":"INFO", "msg":"png generated for 30807"},
+{"time":"2022-07-01 11:04:49,772", "module":"__main__", "line_no":65, "level":"INFO", "msg":"save output csv 30807"},
+{"time":"2022-07-01 11:04:49,772", "module":"__main__", "line_no":185, "level":"INFO", "msg":"process complete for 30807!"},

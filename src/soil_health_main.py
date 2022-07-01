@@ -201,7 +201,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
         
         #pushed to s3
-        uploadfile(local_path,s3path)
+        # uploadfile(local_path,s3path)
         print('pushed to s3')
         
         files = glob.glob('*.log')
@@ -283,7 +283,7 @@ if __name__ == "__main__":
         # farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
         try:
             compute_soil_health(farm_path, pixel_size, input_bands,
-                                soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report =False)
+                                soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report =True)
         except Exception as e:
             print(e)
         
