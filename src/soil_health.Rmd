@@ -76,7 +76,7 @@ comb <- paste0(dist, ", ", state)
 png_path <- "/home/satyukt/Projects/1000/soil_health/output/png/"
 
 
-bound <- sprintf("/home/satyukt/Projects/1000/soil_health/output/Farm Boundary/%s/%s.png", farm.id, farm.id)
+# bound <- sprintf("/home/satyukt/Projects/1000/soil_health/output/Farm Boundary/%s/%s.png", farm.id, farm.id)
 N <- sprintf("%s/%s/%s_N.png", png_path, farm.id, farm.id)
 P <- sprintf("%s/%s/%s_P.png", png_path, farm.id, farm.id)
 K <- sprintf("%s/%s/%s_K.png", png_path, farm.id, farm.id)
@@ -118,40 +118,8 @@ standard_N <- range(280, 560)
 standard_P <- range(10, 24)
 standard_k <- range(108, 280)
 standard_oc <- range(0.5, 0.75)
-#
-# remark_oc <- switch (avg_oc,
-#   avg_oc < standard_oc[1], remark_oc <- remark.csv$Generic.Remarks[10],
-#   avg_oc > standard_oc[2], remark_oc <- remark.csv$Generic.Remarks[12],
-#   avg_oc , remark_oc <- remark.csv$Generic.Remarks[11]
-# )
-#
-# remark_k <- switch (avg_k,
-#   avg_k < standard_k[1], remark_k <- remark.csv$Generic.Remarks[7],
-#   avg_k > standard_k[2], remark_k <- remark.csv$Generic.Remarks[9],
-#   avg_k , remark_k <- remark.csv$Generic.Remarks[8]
-# )
-#
-# remark_n <- switch (avg_n,
-#   avg_n < standard_N[1], remark_n <- remark.csv$Generic.Remarks[1],
-#   avg_n > standard_N[2], remark_n <- remark.csv$Generic.Remarks[3],
-#   avg_n , remark_n <- remark.csv$Generic.Remarks[2]
-# )
-#
-#
-# remark_p <- switch (avg_p,
-#   avg_p < standard_P[1], remark_p <- remark.csv$Generic.Remarks[4],
-#   avg_p > standard_P[2], remark_p <- remark.csv$Generic.Remarks[6],
-#   avg_p , remark_p <- remark.csv$Generic.Remarks[5]
-# )
-#
-# remark_ph<- switch (avg_ph,
-#   avg_ph <= 5.5, remark_ph <- remark.csv$Generic.Remarks[13],
-#   (avg_ph >=5.6& avg_ph <=6.5)  , remark_ph <- remark.csv$Generic.Remarks[14],
-#   (avg_ph > 6.5 & avg_ph <=7.0) , remark_ph <- remark.csv$Generic.Remarks[15],
-#   (avg_ph > 7.0 & avg_ph <= 7.5), remark_ph <- remark.csv$Generic.Remarks[16],
-#   (avg_ph > 7.5 & avg_ph <= 8.5), remark_ph <- remark.csv$Generic.Remarks[17],
-#   (avg_ph > 8.5), remark_ph <- remark.csv$Generic.Remarks[18]
-# )
+
+
 if (avg_ph <= 5.5) {
   remark_ph <- remark.csv$Generic.Remarks[13]
 } else if (avg_ph >= 5.6 & avg_ph <= 6.5) {
@@ -208,24 +176,19 @@ if (avg_oc < standard_oc[1]) {
 \title{\textbf{Satyukt Analytics Pvt Ltd \\ Soil Analysis Report}}
 \date{}
 \maketitle
-\begin{figure}[htp]
- \centering
- \includegraphics[width = 13cm,height = 11cm]{`r bound`}
-\end{figure}
 \centering
 \centering
-\vspace{30px}
+\vspace{150px}
 \begin{tblr}{
     width = 12cm,
     colspec = {m{6cm} m{6cm}},
     hlines,
     vlines,
-    row{1-3}={7ex}}
-\centering Farm ID & \centering {`r in.filename`} \\
+    row{1-3}={10ex}}
+\centering Farm ID & {`r farm.id`} \centering  \\
 \centering Date of Satellite pass & \centering {`r date`}\\
 \centering Location & \centering {`r comb`} \\
-\end{tblr}
-\thispagestyle{fancy}
+\end{tblr}\thispagestyle{fancy}
 \fancyfoot[C]{117, 2nd Floor, Ashwin Arcade, Sanjay Nagar Main Road, Ashwath Nagar, Bangalore 560094 \\ Email: contact@satyukt.com, Contact No.: +91 6361763205 \\www.satyukt.com}
 \renewcommand{\headrulewidth}{0pt}%
 \renewcommand{\footrulewidth}{1pt}%

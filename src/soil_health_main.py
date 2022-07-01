@@ -101,29 +101,24 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     else:
         process_png = False
 
-<<<<<<< HEAD
     if os.path.exists(save_csv_stats):
         print('file exists')
-=======
-    # if os.path.exists(save_csv_stats):
-        # print('file exists')
->>>>>>> 2702e57009f8c34a4192f77de1f9bce371bb4bc5
         # return
 
     # checking crop type and client id 
     if client_info:
-        not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
         client_data = pd.read_csv(client_info)
-        try:
-            farm_crop = list(client_data.loc[(client_data['polygon_id'] ==
-                                              int(farm_id))]['croptype'])[0]
+        # try:
+        # not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
+        #     farm_crop = list(client_data.loc[(client_data['farm_id'] ==
+        #                                       int(farm_id))]['croptype'])[0]
 
-        except:
-            farm_crop = ''
-            pass
+        # except:
+        #     farm_crop = ''
+        #     pass
 
-        if farm_crop in not_crop:
-            return
+        # if farm_crop in not_crop:
+        #     return
         
         try:
             id_client = client_data.loc[(client_data['farm_id']==int(farm_id)),['client_id']].values[0]
@@ -206,11 +201,10 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
         
         #pushed to s3
-        # uploadfile(local_path,s3path)
+        uploadfile(local_path,s3path)
         print('pushed to s3')
         
         files = glob.glob('*.log')
-        # file =
         for logs in files:
             os.remove(logs) 
     
@@ -253,8 +247,8 @@ if __name__ == "__main__":
     path_csv = config['Output_path']['path_csv']
     path_png = config['Output_path']['path_png']
 
-    # client_info = config['aws']['client_info']
-    client_info = None
+    client_info = config['aws']['client_info']
+    # client_info = None
     if not os.path.exists(path_tiff):
         os.makedirs(path_tiff)
 
@@ -284,26 +278,16 @@ if __name__ == "__main__":
     farm_list = glob.glob(os.path.join(area_path, "*.csv"))
     for i, farm_path in enumerate(farm_list):
 
-<<<<<<< HEAD
         farm_path = "/home/satyukt/Projects/1000/area/30807.csv"
         # farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
-=======
-        farm_path = "/home/satyukt/Projects/1000/area/30655.csv"
-        # farm_path = "/home/satyukt/Projects/1000/sat2credit/area/30315.csv"
-        # farm_path = '/home/satyukt/Desktop/Manish/wkt_to_shp/create_wkt/area/*.csv'
->>>>>>> 2702e57009f8c34a4192f77de1f9bce371bb4bc5
         try:
             compute_soil_health(farm_path, pixel_size, input_bands,
                                 soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report =True)
         except Exception as e:
             print(e)
-<<<<<<< HEAD
         
+        end = time.time()
+        print(end-start)
         exit()
-=======
-        exit()    
->>>>>>> 2702e57009f8c34a4192f77de1f9bce371bb4bc5
 
     # subprocess.call(["sh", "rsync_aws.sh"])
-    end = time.time()
-    print(end-start)
