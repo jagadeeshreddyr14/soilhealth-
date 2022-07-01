@@ -442,9 +442,10 @@ Maximum & {`r max_ph`} & \\
 \end{tblr}
 
 \vspace{0.5in}
-\textbf{Disclaimer:
-This is generated on the date when the land was barren}
-
+\flushleft \textbf{Disclaimer:}
+\begin{footnotesize}
+{\flushright \color {red} This is generated on the date when the land was barren.The Figures are based on satellite images with a spatial resolution of 10m*10m. When compared to lab tests, there may be minor differences.The reports are not to be reproduced wholly or in part and cannot be used as evidence in the court of LAW.}
+\end{footnotesize}
 \thispagestyle{fancy}
 \fancyfoot[C]{117, 2nd Floor, Ashwin Arcade, Sanjay Nagar Main Road, Ashwath Nagar, Bangalore 560094 \\ Email: contact@satyukt.com, Contact No.: +91 6361763205 \\www.satyukt.com}
 \renewcommand{\headrulewidth}{0pt}%

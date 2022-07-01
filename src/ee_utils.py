@@ -63,7 +63,7 @@ def masker(greenest, minest):
         mask1 = greenest.select('NDVI').gt(0.3)
         mask2 = minest.select('NDVI').lt(0.6)
         mask3 = image.select('NDVI').gt(0.05)
-        mask4 = image.select('NDVI').lt(0.3)
+        mask4 = image.select('NDVI').lt(0.4)
         return image.updateMask(mask1).updateMask(mask2).updateMask(mask3).updateMask(mask4)
 
     return wrap

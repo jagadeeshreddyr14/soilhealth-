@@ -14,8 +14,10 @@ from subprocess import call
 from pyproj import Geod
 import configparser
 
+
 from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff
 from ndvi_barren import get_end_date, read_farm
+from _push_s3 import uploadfile
 from _create_png import create_png
 from subprocess import call,Popen,PIPE
 import atexit
@@ -74,7 +76,7 @@ def save_empty_csv(path_csv):
 
 
 def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_ranges, path_tiff, path_png=None,
-                        path_csv=None, client_info=None):
+                        path_csv=None, client_info=None, report = False):
 
     global logger
     logger = MyLogger(module_name=__name__,
@@ -101,7 +103,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
 
     if os.path.exists(save_csv_stats):
         print('file exists')
-        return
+        # return
 
     # checking crop type and client id 
     if client_info:
@@ -117,7 +119,12 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
 
         if farm_crop in not_crop:
             return
-        # id_client = client_data[(client_data['polygon_id']==int(farm_id))]['client_id'].values[0]
+        
+        try:
+            id_client = client_data.loc[(client_data['farm_id']==int(farm_id)),['client_id']].values[0]
+            # id_client 
+        except:
+            pass
 
     try:
         if get_area(farm_path) < 150:
@@ -179,10 +186,30 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
 
     '''Generating report'''
     
-    proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/new_script.r %s" %(farm_id)], shell=True,stdout=PIPE)
-    proc.communicate()
-    atexit.register(proc.terminate)
-    pid = proc.pid
+    if report == True:
+    
+        proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/new_script.r %s" %(farm_id)], shell=True,stdout=PIPE)
+        proc.communicate()
+        atexit.register(proc.terminate)
+        pid = proc.pid
+        
+        #push s3 
+        # id_client = '1936'
+        
+        local_path = f'/home/satyukt/Projects/1000/soil_health/output/Report/{farm_id}.pdf'
+
+        s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
+        
+        #pushed to s3
+        uploadfile(local_path,s3path)
+        print('pushed to s3')
+        
+        files = glob.glob('*.log')
+        # file =
+        for logs in files:
+            os.remove(logs) 
+    
+    
 
     return None
 
@@ -246,19 +273,21 @@ if __name__ == "__main__":
 
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
+    
 
     # area_path = "/home/satyukt/Desktop/myfiles/soil/create_wkt/area/"
     farm_list = glob.glob(os.path.join(area_path, "*.csv"))
     for i, farm_path in enumerate(farm_list):
 
-        # farm_path = "/home/satyukt/Projects/1000/area/25355.csv"
-        farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
+        farm_path = "/home/satyukt/Projects/1000/area/30807.csv"
+        # farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
         try:
             compute_soil_health(farm_path, pixel_size, input_bands,
-                                soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info)
+                                soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report =False)
         except Exception as e:
             print(e)
-            
+        
+        exit()
 
     subprocess.call(["sh", "rsync_aws.sh"])
     end = time.time()
