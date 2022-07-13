@@ -13,17 +13,29 @@ import subprocess
 from subprocess import call
 from pyproj import Geod
 import configparser
+from subprocess import call,Popen,PIPE
+import atexit
+import sqlalchemy
+
 
 
 from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff
 from ndvi_barren import get_end_date, read_farm
 from _push_s3 import uploadfile
 from _create_png import create_png
-from subprocess import call,Popen,PIPE
-import atexit
+from _fetch_gcp import gcp_check
 
 import warnings
 warnings.filterwarnings("ignore")
+
+
+dbname="sat2farmdb"
+user="remote"
+password="satelite"
+host="34.125.75.120"
+port=3306
+engine = sqlalchemy.create_engine(f"mysql+pymysql://{user}:{password}@{host}:{port}/{dbname}")
+
 
 
 def roundoff(x):
@@ -101,11 +113,11 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     else:
         process_png = False
 
-    if os.path.exists(save_csv_stats):
-        print('file exists')
-        # return
+    # if os.path.exists(save_csv_stats):
+    #     print('file exists')
+    #     return
 
-    # checking crop type and client id 
+    ''' getting crop type and client id '''
     if client_info:
         client_data = pd.read_csv(client_info)
         # try:
@@ -121,7 +133,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         #     return
         
         try:
-            id_client = client_data.loc[(client_data['farm_id']==int(farm_id)),['client_id']].values[0]
+            id_client = client_data.loc[(client_data['polygon_id']==int(farm_id)),['client_id']].values[0].tolist()[0]
             # id_client 
         except:
             pass
@@ -183,18 +195,32 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         format_zonal_stats(zonal_stats, farm_id, start_date,
                            path_csv, save_as_csv=True)
     logger.info(f"process complete for {farm_id}!")
+    
+    '''get referal_code'''
+    try:
+        referal_code = pd.read_sql_query(f"select referal_code from user_details where mobile_no in (select user_name from user_credentials where user_id in \
+                        (select clientID from polygonStore where id={farm_id}))",engine).values[0]
+        
+    except Exception as e:
+        print(e)
 
     '''Generating report'''
     
     if report == True:
-    
-        proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/new_script.r %s" %(farm_id)], shell=True,stdout=PIPE)
-        proc.communicate()
-        atexit.register(proc.terminate)
-        pid = proc.pid
         
-        #push s3 
-        # id_client = '1936'
+        if referal_code == '17684':
+            proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/17684.r %s" %(farm_id)], shell=True,stdout=PIPE)
+            proc.communicate()
+            atexit.register(proc.terminate)
+            pid = proc.pid
+            
+        else:
+            proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/new_script.r %s" %(farm_id)], shell=True,stdout=PIPE)
+            proc.communicate()
+            atexit.register(proc.terminate)
+            pid = proc.pid
+        # id_client = '17580'
+        #push s3 `
         
         local_path = f'/home/satyukt/Projects/1000/soil_health/output/Report/{farm_id}.pdf'
 
@@ -202,6 +228,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         
         #pushed to s3
         uploadfile(local_path,s3path)
+        logger.info(f'pushed to aws {id_client} = {farm_id}')
         print('pushed to s3')
         
         files = glob.glob('*.log')
@@ -238,6 +265,7 @@ if __name__ == "__main__":
     ee.Initialize()
 
     config = configparser.ConfigParser()
+
     config.read('../Config/config.ini')
 
     area_path = config['Default']['area_path']
@@ -257,7 +285,11 @@ if __name__ == "__main__":
 
     if not os.path.exists(path_png):
         os.makedirs(path_png)
+        
+    logger = MyLogger(module_name=__name__,
+                      filename="../logs/soil_health.log").create_logs()
 
+    
     nuts_ranges = {
         'N': (100, 300),
         'P': (5, 50),
@@ -273,21 +305,29 @@ if __name__ == "__main__":
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
     
+    check,list1 = gcp_check()
+    # check=True
+    if check == True:
+        farm_list = []
+        for i,farm in enumerate(list1):
+            farm_list.append(os.path.join(area_path, f"{farm}.csv"))
+        # area_path = "/home/satyukt/Desktop/Manish/wkt_to_shp/create_wkt/area/"
+        # farm_list = glob.glob(os.path.join(area_path, "*.csv"))
+        for i, farm_path in enumerate(farm_list):
 
-    # area_path = "/home/satyukt/Desktop/Manish/wkt_to_shp/create_wkt/area/"
-    farm_list = glob.glob(os.path.join(area_path, "*.csv"))
-    for i, farm_path in enumerate(farm_list):
-
-        farm_path = "/home/satyukt/Projects/1000/area/30807.csv"
-        # farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
-        try:
-            compute_soil_health(farm_path, pixel_size, input_bands,
-                                soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report =True)
-        except Exception as e:
-            print(e)
-        
+            # farm_path = "/home/satyukt/Projects/1000/area/31311.csv"
+            # farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
+            try:
+                compute_soil_health(farm_path, pixel_size, input_bands,
+                                    soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report =True)
+            except Exception as e:
+                print(e)
+            
         end = time.time()
         print(end-start)
+        logger.info(end-start)
         exit()
+    # logger.info('no farms added')
 
     # subprocess.call(["sh", "rsync_aws.sh"])
+

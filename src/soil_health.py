@@ -10,6 +10,7 @@ import rasterio as rs
 import os
 from rasterio.transform import from_origin
 import configparser
+from scipy import ndimage
 
 
 from indices import NDWI_function,  NDVI_function, NDVI_G_function, SR_n2_function, SR_N_function, TBVI1_function
@@ -105,6 +106,28 @@ def genPredictions(nut, nut_slr, input_var):
 
     return predictions
 
+def convolve_mapping(x):
+    if np.isnan(x[4]) and not np.isnan(np.delete(x, 4)).all():
+        return np.nanmedian(np.delete(x, 4))
+    else:
+        return x[4]
+
+
+def fillNA(img):
+    #img = rio.open(img)
+    #ras = img.read(1)
+    tmp_img = img
+    # window_1 = np.array()
+    window_1 = ndimage.generic_filter(
+        tmp_img, function=convolve_mapping, footprint=np.ones((3, 3)), mode='nearest')
+    while True:
+        window_1 = ndimage.generic_filter(
+            window_1, function=convolve_mapping, footprint=np.ones((3, 3)), mode='nearest')
+        if ~np.any(np.isnan(window_1) == True):
+            break
+    # return show(window_1)
+    return window_1
+
 
 def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
 
@@ -127,7 +150,7 @@ def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
     #     os.mkdir(save_path_tiff)
 
     with rs.open(out_path, 'w', **options) as src:
-        src.write(data_array, 1)
+        src.write(fillNA(data_array), 1)
 
 
 if __name__ == "__main__":

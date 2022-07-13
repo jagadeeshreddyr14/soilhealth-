@@ -96,7 +96,8 @@ def get_end_date(farm_path):
     df_sm.index = pd.to_datetime(df_sm.index, format='%Y-%m-%d')
     # df_sm = df_sm.groupby(pd.Grouper(freq="M")).mean()['SM']
     end_date = ''
-
+    # df_sm = df_sm[:-3]
+    
     if df_sm[df_sm < 0.4].last_valid_index():
         end_date = df_sm[df_sm < 0.4].last_valid_index()
     else:

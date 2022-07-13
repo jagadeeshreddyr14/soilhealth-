@@ -16,27 +16,27 @@ import matplotlib.pyplot as plt
 
 '''fill empty pixels in tiff'''
 
-def convolve_mapping(x):
-    if np.isnan(x[4]) and not np.isnan(np.delete(x, 4)).all():
-        return np.nanmedian(np.delete(x, 4))
-    else:
-        return x[4]
+# def convolve_mapping(x):
+#     if np.isnan(x[4]) and not np.isnan(np.delete(x, 4)).all():
+#         return np.nanmedian(np.delete(x, 4))
+#     else:
+#         return x[4]
 
 
-def fillNA(img):
-    #img = rio.open(img)
-    #ras = img.read(1)
-    tmp_img = img
-    # window_1 = np.array()
-    window_1 = ndimage.generic_filter(
-        tmp_img, function=convolve_mapping, footprint=np.ones((3, 3)), mode='nearest')
-    while True:
-        window_1 = ndimage.generic_filter(
-            window_1, function=convolve_mapping, footprint=np.ones((3, 3)), mode='nearest')
-        if ~np.any(np.isnan(window_1) == True):
-            break
-    # return show(window_1)
-    return window_1
+# def fillNA(img):
+#     #img = rio.open(img)
+#     #ras = img.read(1)
+#     tmp_img = img
+#     # window_1 = np.array()
+#     window_1 = ndimage.generic_filter(
+#         tmp_img, function=convolve_mapping, footprint=np.ones((3, 3)), mode='nearest')
+#     while True:
+#         window_1 = ndimage.generic_filter(
+#             window_1, function=convolve_mapping, footprint=np.ones((3, 3)), mode='nearest')
+#         if ~np.any(np.isnan(window_1) == True):
+#             break
+#     # return show(window_1)
+#     return window_1
 
 
 def create_png(farm_path, farm_id, tif_path, nuts_ranges, png_save_path):
@@ -77,7 +77,16 @@ def create_png(farm_path, farm_id, tif_path, nuts_ranges, png_save_path):
         nut = dae.split('_')[-1]
         plt_date = str(datetime.datetime.strptime(
             date_string, "%Y%m%d").date())
-
+        if nut == 'OC':
+            png_title = 'Soil Organic Carbon'
+        elif nut == 'N':
+            png_title = 'Nitrogen'
+        elif nut == 'P':
+            png_title = 'Phosphorus'
+        elif nut == 'K':
+            png_title = 'Potassium'
+        elif nut == 'pH':
+            png_title = 'pH'
         if nut == 'OC' or nut == 'pH':
             nut_values = list(np.linspace(
                 nuts_ranges[nut][0], nuts_ranges[nut][1], 5))
@@ -90,8 +99,8 @@ def create_png(farm_path, farm_id, tif_path, nuts_ranges, png_save_path):
         with rio.open(files, 'r') as src:
             image = src.read(1)
 
-        fill_tiff = fillNA(image)
-        im = ax.imshow(fill_tiff, cmap=cmap, vmin=nuts_ranges[nut][0], vmax=nuts_ranges[nut][1], extent=[
+        # fill_tiff = fillNA(image)
+        im = ax.imshow(image, cmap=cmap, vmin=nuts_ranges[nut][0], vmax=nuts_ranges[nut][1], extent=[
             extent_gdf[0], extent_gdf[2], extent_gdf[1], extent_gdf[3]])
 
         gap = (polygon.overlay(gpd.GeoDataFrame(geometry=polygon_bound.geometry.buffer(
@@ -102,7 +111,7 @@ def create_png(farm_path, farm_id, tif_path, nuts_ranges, png_save_path):
         ax.set_ylim(y_axis)
         fig.colorbar(im, ticks=nut_values, fraction=0.03, location='right')
         fig.suptitle(
-            f"{nut}\n{plt_date}", ha='center', fontsize='20', va='top', fontweight='bold', fontstyle='normal')
+            f"{png_title}\n{plt_date}", ha='center', fontsize='20', va='top', fontweight='bold', fontstyle='normal')
         plt.axis('off')
         if not os.path.exists(png_save_path):
             os.makedirs(png_save_path)
