@@ -1,6 +1,0 @@
-{"time":"2022-07-13 10:36:15,296", "module":"__main__", "line_no":183, "level":"INFO", "msg":"Raster generated for 31060"},
-{"time":"2022-07-13 10:36:16,120", "module":"__main__", "line_no":190, "level":"INFO", "msg":"png generated for 31060"},
-{"time":"2022-07-13 10:36:16,151", "module":"__main__", "line_no":77, "level":"INFO", "msg":"save output csv 31060"},
-{"time":"2022-07-13 10:36:16,151", "module":"__main__", "line_no":197, "level":"INFO", "msg":"process complete for 31060!"},
-{"time":"2022-07-13 10:36:28,176", "module":"__main__", "line_no":231, "level":"INFO", "msg":"pushed to aws 11502 = 31060"},
-{"time":"2022-07-13 10:36:28,177", "module":"__main__", "line_no":328, "level":"INFO", "msg":"25.511759042739868"},
