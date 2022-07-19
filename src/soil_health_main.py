@@ -113,9 +113,9 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     else:
         process_png = False
 
-    # if os.path.exists(save_csv_stats):
-    #     print('file exists')
-    #     return
+    if os.path.exists(save_csv_stats):
+        print('file exists')
+        return
 
     ''' getting crop type and client id '''
     if client_info:
@@ -202,6 +202,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
                         (select clientID from polygonStore where id={farm_id}))",engine).values[0]
         
     except Exception as e:
+        referal_code = ''
         print(e)
 
     '''Generating report'''
@@ -219,7 +220,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
             proc.communicate()
             atexit.register(proc.terminate)
             pid = proc.pid
-        # id_client = '17580'
+        # id_client = '17711'
         #push s3 `
         
         local_path = f'/home/satyukt/Projects/1000/soil_health/output/Report/{farm_id}.pdf'
@@ -304,7 +305,7 @@ if __name__ == "__main__":
 
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
-    
+    #9200
     check,list1 = gcp_check()
     # check=True
     if check == True:
@@ -315,13 +316,15 @@ if __name__ == "__main__":
         # farm_list = glob.glob(os.path.join(area_path, "*.csv"))
         for i, farm_path in enumerate(farm_list):
 
-            # farm_path = "/home/satyukt/Projects/1000/area/31311.csv"
+            # farm_path = "/home/satyukt/Projects/1000/area/31806.csv"
             # farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
             try:
                 compute_soil_health(farm_path, pixel_size, input_bands,
                                     soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report =True)
             except Exception as e:
                 print(e)
+                
+            # exit()
             
         end = time.time()
         print(end-start)
