@@ -120,14 +120,14 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     ''' getting crop type and client id '''
     if client_info:
         client_data = pd.read_csv(client_info)
-        # try:
-        # not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
-        #     farm_crop = list(client_data.loc[(client_data['farm_id'] ==
-        #                                       int(farm_id))]['croptype'])[0]
+        try:
+            not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
+            crop = client_data.loc[(client_data['polygon_id'] ==  int(849))]['croptype'].values.tolist()[0]
 
-        # except:
-        #     farm_crop = ''
-        #     pass
+        except:
+            print('no crop')
+            crop = ''
+            pass
 
         # if farm_crop in not_crop:
         #     return
@@ -206,17 +206,17 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         print(e)
 
     '''Generating report'''
-    
+    # crop = 'Maize'
     if report == True:
         
         if referal_code == '17684':
-            proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/17684.r %s" %(farm_id)], shell=True,stdout=PIPE)
+            proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/17684.r %s %s" %(farm_id, crop)], shell=True,stdout=PIPE)
             proc.communicate()
             atexit.register(proc.terminate)
             pid = proc.pid
             
         else:
-            proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/new_script.r %s" %(farm_id)], shell=True,stdout=PIPE)
+            proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/new_script.r %s %s" %(farm_id, crop)], shell=True,stdout=PIPE)
             proc.communicate()
             atexit.register(proc.terminate)
             pid = proc.pid
@@ -313,10 +313,10 @@ if __name__ == "__main__":
         for i,farm in enumerate(list1):
             farm_list.append(os.path.join(area_path, f"{farm}.csv"))
         # area_path = "/home/satyukt/Desktop/Manish/wkt_to_shp/create_wkt/area/"
-        # farm_list = glob.glob(os.path.join(area_path, "*.csv"))
+        farm_list = glob.glob(os.path.join(area_path, "*.csv"))
         for i, farm_path in enumerate(farm_list):
 
-            # farm_path = "/home/satyukt/Projects/1000/area/31806.csv"
+            # farm_path = "/home/satyukt/Projects/1000/area/19393.csv"
             # farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
             try:
                 compute_soil_health(farm_path, pixel_size, input_bands,

@@ -1,0 +1,19 @@
+Cases,Generic Remarks
+N - Low,"The Nitrogen content of the field is lower than normal. General recommendation of Nitrogen for green gram crop is 12.5 kg/ha for Rainfed and 25 kg/ha for irrigated conditions. Green gram being leguminous, nitrogen fixing crop do not require additional supplement in low nitrogen conditions as they obtain their own nitrogen from the air. "
+N - Normal,The Nitrogen content in the field is within the normal range.
+N - High,The Nitrogen content in the field is above the normal. This can be corrected by minimising the recommended dosage for the crop. It is advised to apply 10 kg/ha for Rainfed and 20 kg/ha for irrigated conditions.
+P - Low,"The phosphorus content in the field is below normal. Therefore, adding green manure residues/composted manure/Bone meal which can increase soil mineralization rates of phosphorus which is important inputs to yield good output from green gram.."
+P - Normal,The amount of phosphorus in the field is within standard range.
+P - High,"The amount of phosphorus in the field is above normal and can be corrected by avoiding organic inputs to the field, as minimising phosphorous inputs leads to decrease in yield and quality of the crop."
+K - Low,Potassium content in the field is low and can be fixed by adding muriate of potash or sulfate of potash. It can also be corrected by organic sources such as wood ash and kelp/seaweed available in markets. 
+K - Normal,The Potassium content over the field is in the normal range.
+K - High,"The potassium content in the field is above normal range. This can be corrected by ploughing and loosening the soil, fully irrigate the field with proper drainage to dissolve and flush out surplus potassium before sowing. Also avoid potassium-rich fertilizers. Foliar spray of MgSO4 @ 0.5 % is recommended to apply after 30 days of sowing."
+OC - Low,"The amount of soil organic carbon is low and can be fixed by increasing cropping intensity, which helps to improve organic matter returns to the soil, by growing high biomass crops and pastures. It can also be managed by increasing organic inputs to the soil."
+OC - Normal,The amount of soil organic carbon in the field is within standard range.
+OC - High,The amount of soil organic carbon in the field is above normal. This can be fixed by avoiding organic inputs to the soil.
+pH - < 5.5,Strongly Acidic soil. The application of agricultural lime (CaCO3 or Dolomite @ 5%) neutralizes soil acidity.
+pH - 5.6-6.5,Moderately Acidic soil. The application of agricultural lime (CaCO3 @ 5%) neutralizes soil acidity.
+pH - 6.6-6.9,"Slightly Acidic soil. Green gram crop grow best in soil with pH ranging between 6.5 - 7.5. Therefore, following intercultural operations for effiecient holding of soil moisture and drainage in the field, helps balance pH of the soil."
+pH - 7.0-7.5,"Neutral pH. Green gram crop grow best in soil with pH ranging between 6.5 - 7.5. Therefore, the pH of field is desirable for plant growth."
+pH - 7.6-8.5,Moderately Alkaline soil. It is recommended to apply Sulphur (10 kg/ha) along with NPK during sowing time.
+pH - > 8.5,"Strongly Alkaline soil. To minimize soil alkalinity, it is recommended to carry out leaching (irrigating the field prior to land preparation with proper drainage) along with applyication of Sulphur (10 kg/ha) along with NPK during sowing time."

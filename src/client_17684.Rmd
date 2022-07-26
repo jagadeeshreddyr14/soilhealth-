@@ -5,7 +5,7 @@ date:
 output: pdf_document
 params: 
   args: "myarg"
-  
+  args1: "crop"
 header-includes:
 - \usepackage[utf8]{inputenc}
 - \usepackage{xcolor}
@@ -35,13 +35,21 @@ library(dplyr, warn.conflicts = FALSE)
 library(tidygeocoder)
 
 in.filename <- params$args
-
+crop <- params$args1
 # in.filename <- "28630"
 
 # in.glob <- Sys.glob(file.path(dir_file,in.filename))
 
 # Remark Path
-remark.csv <- read.csv("/home/satyukt/Projects/1000/soil_health/data/report_remarks/remarks.csv")
+# remark.csv <- read.csv("/home/satyukt/Projects/1000/soil_health/data/report_remarks/remarks.csv")
+if(crop == "Maize"){
+  remark.csv <- read.csv('/home/satyukt/Projects/1000/soil_health/data/report_remarks/maize.csv')
+} else if(crop == "Green_Gram"){
+  remark.csv <-  read.csv('/home/satyukt/Projects/1000/soil_health/data/report_remarks/green_gram.csv')
+} else{
+  remark.csv <- read.csv("/home/satyukt/Projects/1000/soil_health/data/report_remarks/remarks.csv")
+}
+
 
 # Get the Farm ID
 farm.id <- in.filename
