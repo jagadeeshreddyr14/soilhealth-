@@ -16,9 +16,9 @@ def uploadfile(localpath, s3path):
 if __name__ == "__main__":
     
     
-    id_client = '17711'
-    farm_id = '31537'
-
+    id_client = '17684'
+    farm_id = '55633'
+    
     local_path = f'/home/satyukt/Projects/1000/soil_health/output/Report/{farm_id}.pdf'
 
     s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'

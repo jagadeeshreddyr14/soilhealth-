@@ -12,3 +12,6 @@ output
 
 logs/
 .vscode
+
+
+/home/satyukt/Projects/1000/soil_health/data/trash/*

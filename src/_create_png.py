@@ -77,6 +77,7 @@ def create_png(farm_path, farm_id, tif_path, nuts_ranges, png_save_path):
         nut = dae.split('_')[-1]
         plt_date = str(datetime.datetime.strptime(
             date_string, "%Y%m%d").date())
+        # plt_date = str("2022-06-10")
         if nut == 'OC':
             png_title = 'Soil Organic Carbon'
         elif nut == 'N':
@@ -129,7 +130,7 @@ if __name__ == "__main__":
     }
 
     # farm_path = "/home/satyukt/Projects/1000/area/man_farm2_niketanlaygude.csv"
-    farm_path = "/home/satyukt/Desktop/myfiles/soil/area/farm1b_praveen_tomato_chikballapur.csv"
+    farm_path = "/home/satyukt/Projects/1000/area/55691.csv"
     # farm_path = glob.glob('/home/satyukt/Desktop/myfiles/soil/area/*.csv')
 
     # for i, file in enumerate(farm_path):

@@ -71,7 +71,7 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
 
     dfl = dfl.apply(lambda x: roundoff(x))
     # dfl.pH = dfl.pH.apply(lambda x: x-1 if (x > 7) else x)
-    os.makedirs(os.path.dirname(path_csv), exist_ok=True)
+        
     if save_as_csv:
         dfl.to_csv(f"{path_csv}/{farmid}.csv")
     logger.info(f'save output csv {farmid}')
@@ -115,18 +115,19 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
 
     if os.path.exists(save_csv_stats):
         print('file exists')
-        return
-
+        # return
+    logger.info(f'Process started for {farm_id}')
     ''' getting crop type and client id '''
     if client_info:
         client_data = pd.read_csv(client_info)
         try:
             not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
-            crop = client_data.loc[(client_data['polygon_id'] ==  int(849))]['croptype'].values.tolist()[0]
+            crop = client_data.loc[(client_data['polygon_id'] == int(farm_id))]['croptype'].values.tolist()[0]
 
         except:
+            crop = None
             print('no crop')
-            crop = ''
+            # crop = ''
             pass
 
         # if farm_crop in not_crop:
@@ -135,7 +136,8 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         try:
             id_client = client_data.loc[(client_data['polygon_id']==int(farm_id)),['client_id']].values[0].tolist()[0]
             # id_client 
-        except:
+        except Exception as e:
+            print(e)
             pass
 
     try:
@@ -192,7 +194,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     '''Generating CSV(NPK)'''
     if process_csv:
         zonal_stats = get_zonal_stats(farm_path, save_path_tiff)
-        format_zonal_stats(zonal_stats, farm_id, start_date,
+        format_zonal_stats(zonal_stats, farm_id, end_date,
                            path_csv, save_as_csv=True)
     logger.info(f"process complete for {farm_id}!")
     
@@ -202,42 +204,33 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
                         (select clientID from polygonStore where id={farm_id}))",engine).values[0]
         
     except Exception as e:
-        referal_code = ''
-        print(e)
+        referal_code = None
+        print('no referal code')
 
     '''Generating report'''
-    # crop = 'Maize'
+    # crop = None
+    # referal_code = '15368'
     if report == True:
         
-        if referal_code == '17684':
-            proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/17684.r %s %s" %(farm_id, crop)], shell=True,stdout=PIPE)
-            proc.communicate()
-            atexit.register(proc.terminate)
-            pid = proc.pid
-            
-        else:
-            proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/new_script.r %s %s" %(farm_id, crop)], shell=True,stdout=PIPE)
-            proc.communicate()
-            atexit.register(proc.terminate)
-            pid = proc.pid
-        # id_client = '17711'
-        #push s3 `
+        proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/Generate_report.r %s %s %s" %(farm_id, crop, referal_code)], shell=True,stdout=PIPE)
+        proc.communicate()
+        atexit.register(proc.terminate)
+        pid = proc.pid
+
         
         local_path = f'/home/satyukt/Projects/1000/soil_health/output/Report/{farm_id}.pdf'
 
         s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
         
-        #pushed to s3
+        '''Push to S3'''
         uploadfile(local_path,s3path)
         logger.info(f'pushed to aws {id_client} = {farm_id}')
         print('pushed to s3')
         
-        files = glob.glob('*.log')
-        for logs in files:
-            os.remove(logs) 
+        # files = glob.glob('*.log')
+        # for logs in files:
+        #     os.remove(logs) 
     
-    
-
     return None
 
 def get_path(param, fdr_name):
@@ -306,31 +299,39 @@ if __name__ == "__main__":
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
     #9200
+    
+    """
+    farm_path = "/home/satyukt/Projects/1000/area/55585.csv"
+    compute_soil_health(farm_path, pixel_size, input_bands,
+                                    soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report = True)
+    """
     check,list1 = gcp_check()
     # check=True
     if check == True:
-        farm_list = []
-        for i,farm in enumerate(list1):
-            farm_list.append(os.path.join(area_path, f"{farm}.csv"))
+        farm_list = [os.path.join(area_path,f"{farm}.csv") for farm in list1]
+        # for i,farm in enumerate(list1):
+        #     farm_list.append(os.path.join(area_path, f"{farm}.csv"))
         # area_path = "/home/satyukt/Desktop/Manish/wkt_to_shp/create_wkt/area/"
-        farm_list = glob.glob(os.path.join(area_path, "*.csv"))
+        # farm_list = glob.glob(os.path.join(area_path, "*.csv"))
         for i, farm_path in enumerate(farm_list):
 
-            # farm_path = "/home/satyukt/Projects/1000/area/19393.csv"
-            # farm_path = "/home/satyukt/Projects/1000/sat2credit/area/2405.csv"
             try:
                 compute_soil_health(farm_path, pixel_size, input_bands,
-                                    soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report =True)
+                                    soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report = True)
             except Exception as e:
-                print(e)
-                
+                print(f'error {e}')
+    
             # exit()
             
         end = time.time()
         print(end-start)
         logger.info(end-start)
         exit()
-    # logger.info('no farms added')
+        
+    
+    # else:
+    #     logger.info('no farms added')
 
     # subprocess.call(["sh", "rsync_aws.sh"])
+    
 

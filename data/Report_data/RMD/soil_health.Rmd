@@ -42,13 +42,13 @@ crop <- params$args1
 # remark.csv <- read.csv("/home/satyukt/Projects/1000/soil_health/data/report_remarks/remarks.csv")
 
 if(crop == "Maize"){
-  remark.csv <- read.csv('/home/satyukt/Projects/1000/soil_health/data/report_remarks/maize.csv')
+  remark.csv <- read.csv('/home/satyukt/Projects/1000/soil_health/data/Report_data/report_remarks/maize.csv')
 } else if(crop == "Green_Gram"){
-  remark.csv <-  read.csv('/home/satyukt/Projects/1000/soil_health/data/report_remarks/green_gram.csv')
+  remark.csv <-  read.csv('/home/satyukt/Projects/1000/soil_health/data/Report_data/report_remarks/green_gram.csv')
 } else{
-  remark.csv <- read.csv("/home/satyukt/Projects/1000/soil_health/data/report_remarks/remarks.csv")
+  remark.csv <- read.csv("/home/satyukt/Projects/1000/soil_health/data/Report_data/report_remarks/remarks.csv")
 }
-
+# remark.csv <- read.csv("/home/satyukt/Projects/1000/soil_health/data/report_remarks/remarks.csv")
 
 
 # Get the Farm ID

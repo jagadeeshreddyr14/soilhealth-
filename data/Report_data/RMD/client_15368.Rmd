@@ -43,11 +43,11 @@ crop <- params$args1
 # Remark Path
 # remark.csv <- read.csv("/home/satyukt/Projects/1000/soil_health/data/report_remarks/remarks.csv")
 if(crop == "Maize"){
-  remark.csv <- read.csv('/home/satyukt/Projects/1000/soil_health/data/report_remarks/maize.csv')
+  remark.csv <- read.csv('/home/satyukt/Projects/1000/soil_health/data/Report_data/report_remarks/maize.csv')
 } else if(crop == "Green_Gram"){
-  remark.csv <-  read.csv('/home/satyukt/Projects/1000/soil_health/data/report_remarks/green_gram.csv')
+  remark.csv <-  read.csv('/home/satyukt/Projects/1000/soil_health/data/Report_data/report_remarks/green_gram.csv')
 } else{
-  remark.csv <- read.csv("/home/satyukt/Projects/1000/soil_health/data/report_remarks/remarks.csv")
+  remark.csv <- read.csv("/home/satyukt/Projects/1000/soil_health/data/Report_data/report_remarks/remarks.csv")
 }
 
 
@@ -93,9 +93,9 @@ P <- sprintf("%s/%s/%s_P.png", png_path, farm.id, farm.id)
 K <- sprintf("%s/%s/%s_K.png", png_path, farm.id, farm.id)
 OC <- sprintf("%s/%s/%s_OC.png", png_path, farm.id, farm.id)
 pH <- sprintf("%s/%s/%s_pH.png", png_path, farm.id, farm.id)
-sat_logo <- '/home/satyukt/Projects/1000/soil_health/data/logos_17684/satyukt_logo.png'
+sat_logo <- '/home/satyukt/Projects/1000/soil_health/data/Report_data/logos_15368/satyukt_logo.png'
 magi_logo <- '/home/satyukt/Projects/1000/soil_health/data/logos_17684/magicbloom_logo.jpg'
-rashtr_logo <- '/home/satyukt/Projects/1000/soil_health/data/logos_17684/logo.jpg'
+rashtr_logo <- '/home/satyukt/Projects/1000/soil_health/data/Report_data/logos_15368/logo.png'
 
 
 
@@ -195,25 +195,13 @@ if (avg_oc < standard_oc[1]) {
 \centering \emph{presented by}\\
 
 \includegraphics[width = 6cm,height = 7cm]{`r rashtr_logo`} \\
-\centering {\LARGE \textcolor{Color2}{\textbf{RAITAMITRA SOCIAL TRUST(R)}}}
+\centering {\LARGE \textcolor{Color2}{\textbf{Rural Business Hub}}}\\
+\vspace{20px}
+\centering {\emph{Provided by}}\\
+\vspace{10px}
+\includegraphics[width = 3cm, height = 3cm]{`r sat_logo`}
 
-\begin{figure}[!htb]
-   \begin{minipage}{0.48\textwidth}
-     \centering
-     \caption*{\emph{Presented by}}
-     \includegraphics[width = 3cm, height = 3cm]{`r sat_logo`}
-     {\caption*{\textbf{Satyukt Analytics Pvt.Ltd.}}}
-   \end{minipage}\hfill
-   \begin{minipage}{0.48\textwidth}
-     \centering
-     \caption*{\emph{In Collaboration with}}
-     \includegraphics[width = 3cm, height = 3cm]{`r magi_logo`}
-     \caption*{\textbf{Organic Foilar Spray}}\label{Fig:Data2}
-   \end{minipage}
-\end{figure}
-
-
-\vspace{30px}
+\vspace{20px}
 \begin{tblr}{
     width = 12cm,
     colspec = {m{6cm} m{6cm}},
