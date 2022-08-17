@@ -9,7 +9,6 @@ import numpy as np
 from rasterio.transform import from_origin
 from zonalstats import get_zonal_stats
 import time
-import subprocess
 from subprocess import call
 from pyproj import Geod
 import configparser
@@ -28,7 +27,7 @@ from _fetch_gcp import gcp_check
 import warnings
 warnings.filterwarnings("ignore")
 
-
+'''Getting referral code from gcp'''
 dbname="sat2farmdb"
 user="remote"
 password="satelite"
@@ -70,22 +69,33 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
                       'percentile_95': 'max'}, inplace=True)
 
     dfl = dfl.apply(lambda x: roundoff(x))
-    # dfl.pH = dfl.pH.apply(lambda x: x-1 if (x > 7) else x)
         
     if save_as_csv:
         dfl.to_csv(f"{path_csv}/{farmid}.csv")
-    logger.info(f'save output csv {farmid}')
 
     return None
 
 
-def save_empty_csv(path_csv):
+# def save_empty_csv(path_csv):
 
-    dfl = pd.DataFrame(columns=['K', 'N', 'P', 'OC', 'pH', 'date'], index=[
-                       'average', 'min', 'max'])
+#     dfl = pd.DataFrame(columns=['K', 'N', 'P', 'OC', 'pH', 'date'], index=[
+#                        'average', 'min', 'max'])
 
-    dfl.to_csv(path_csv)
+#     dfl.to_csv(path_csv)
 
+def get_area(farm_path):
+
+    farm_poly = read_farm(farm_path).values[0]
+    # specify a named ellipsoid: geodesic area
+    geod = Geod(ellps="WGS84")
+    area = abs(geod.geometry_area_perimeter(farm_poly)[0])
+
+    return area
+
+def get_path(param, fdr_name):
+    nnut = glob.glob(f"{model_path + fdr_name[0]}/{param}*.pkl")[0]
+    nslr = glob.glob(f"{model_path + fdr_name[1]}/{param}*.pkl")[0]
+    return nnut, nslr
 
 def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_ranges, path_tiff, path_png=None,
                         path_csv=None, client_info=None, report = False):
@@ -98,7 +108,6 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     '''
 
     farm_id = os.path.basename(farm_path).split(".")[0]
-
     save_path_tiff = os.path.join(path_tiff, f"{farm_id}")
 
     if path_csv:
@@ -114,57 +123,52 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         process_png = False
 
     if os.path.exists(save_csv_stats):
-        print('file exists')
-        # return
+        return logger.info(f'file exists {farm_id}')
+    
     logger.info(f'Process started for {farm_id}')
+    
     ''' getting crop type and client id '''
+    
     if client_info:
         client_data = pd.read_csv(client_info)
         try:
             not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
-            crop = client_data.loc[(client_data['polygon_id'] == int(farm_id))]['croptype'].values.tolist()[0]
-
+            crop,id_client = client_data.loc[(client_data['polygon_id'] == int(farm_id)),['croptype','client_id']].values[0]
         except:
-            crop = None
-            print('no crop')
-            # crop = ''
-            pass
-
-        # if farm_crop in not_crop:
-        #     return
-        
-        try:
-            id_client = client_data.loc[(client_data['polygon_id']==int(farm_id)),['client_id']].values[0].tolist()[0]
-            # id_client 
-        except Exception as e:
-            print(e)
             pass
 
     try:
         if get_area(farm_path) < 150:
-
-            return logger.warning(f"Farm size small saving empty csv: {farm_path}")
-    except Exception as e:
-        logger.error(f"farm file format is wrong: {farm_id}")
+            local_path = f'/home/satyukt/Projects/1000/soil_health/data/Report_data/nodata/Farmsmall.pdf'
+            s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
+            uploadfile(local_path,s3path)  
+            return logger.warning(f"Farm size small {farm_path}")
+    except:
+        logger.error(f"farm file is missing: {farm_id}")
         return
-    #logger.info(f"process starting for = {farm_id}")
+    
     x_pt, y_pt, minx, maxy = generate_points(farm_path, pixel_size)
     len_y, len_x = len(y_pt.getInfo()), len(x_pt.getInfo())
     geometry = ee.FeatureCollection(x_pt.map(xcor(y_pt))).flatten()
-    end_date = get_end_date(farm_path)
-
-    try:
+    end_date_lis = get_end_date(farm_path)
+    
+    for ind,end_date in reversed(list(enumerate(end_date_lis))):
         start_date = end_date - datetime.timedelta(days=30)
-    except Exception as TypeError:
-        logger.error(f"{TypeError}")
+        predictor_bands = get_predictor_bands(geometry, start_date, end_date)
+        try:
+            df = getDataFrame(predictor_bands, pred_bands, geometry)
+            df_na = df.dropna()
+            if not df_na.empty:
+                break
+        except:
+            continue
+    else: 
+        local_path = f'/home/satyukt/Projects/1000/soil_health/data/Report_data/nodata/odata.pdf'
+        s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
+        uploadfile(local_path,s3path)
+        logger.info( 'No bands available')
         return
-    predictor_bands = get_predictor_bands(geometry, start_date, end_date)
-    try:
-        df = getDataFrame(predictor_bands, pred_bands, geometry)
-    except Exception as TypeError:
-        logger.error(f"{TypeError}")
-        return
-
+        
     df_tmp = df[["longitude", "latitude"]]
     df_pred = df.loc[df['NDWI'].notna(), pred_bands]
     transform = from_origin(minx, maxy, pixel_size, pixel_size)
@@ -175,28 +179,22 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         try:
             gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, save_path_tiff, transform,
                                  farm_id, len_y, len_x, start_date)
-
-        except Exception as e:
-            print(e)
-            if process_csv:
-                save_empty_csv(save_csv_stats)
-            logger.error(f"{e} ")
+        except: 
+            print('error while generating tiff')
             return
-    logger.info(f"Raster generated for {farm_id}")
+
     
     '''Generating PNG'''
     if process_png:
 
         create_png(farm_path, farm_id, save_path_tiff,
                    nuts_ranges, save_path_png)
-        logger.info(f'png generated for {farm_id}')
         
     '''Generating CSV(NPK)'''
     if process_csv:
         zonal_stats = get_zonal_stats(farm_path, save_path_tiff)
-        format_zonal_stats(zonal_stats, farm_id, end_date,
+        format_zonal_stats(zonal_stats, farm_id, start_date,
                            path_csv, save_as_csv=True)
-    logger.info(f"process complete for {farm_id}!")
     
     '''get referal_code'''
     try:
@@ -208,8 +206,10 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         print('no referal code')
 
     '''Generating report'''
-    # crop = None
-    # referal_code = '15368'
+
+    if id_client == '17684':
+        referal_code = '17684'
+    
     if report == True:
         
         proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/Generate_report.r %s %s %s" %(farm_id, crop, referal_code)], shell=True,stdout=PIPE)
@@ -225,28 +225,10 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         '''Push to S3'''
         uploadfile(local_path,s3path)
         logger.info(f'pushed to aws {id_client} = {farm_id}')
-        print('pushed to s3')
+        print(f'pushed to s3 {farm_id}')
         
-        # files = glob.glob('*.log')
-        # for logs in files:
-        #     os.remove(logs) 
     
     return None
-
-def get_path(param, fdr_name):
-    nnut = glob.glob(f"{model_path + fdr_name[0]}/{param}*.pkl")[0]
-    nslr = glob.glob(f"{model_path + fdr_name[1]}/{param}*.pkl")[0]
-    return nnut, nslr
-
-
-def get_area(farm_path):
-
-    farm_poly = read_farm(farm_path).values[0]
-    # specify a named ellipsoid: geodesic area
-    geod = Geod(ellps="WGS84")
-    area = abs(geod.geometry_area_perimeter(farm_poly)[0])
-
-    return area
 
 
 if __name__ == "__main__":
@@ -298,40 +280,30 @@ if __name__ == "__main__":
 
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
-    #9200
     
     """
-    farm_path = "/home/satyukt/Projects/1000/area/55585.csv"
+    farm_path = "/home/satyukt/Projects/1000/area/30891.csv"
     compute_soil_health(farm_path, pixel_size, input_bands,
                                     soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report = True)
     """
     check,list1 = gcp_check()
-    # check=True
     if check == True:
         farm_list = [os.path.join(area_path,f"{farm}.csv") for farm in list1]
-        # for i,farm in enumerate(list1):
-        #     farm_list.append(os.path.join(area_path, f"{farm}.csv"))
-        # area_path = "/home/satyukt/Desktop/Manish/wkt_to_shp/create_wkt/area/"
-        # farm_list = glob.glob(os.path.join(area_path, "*.csv"))
+
         for i, farm_path in enumerate(farm_list):
 
             try:
                 compute_soil_health(farm_path, pixel_size, input_bands,
                                     soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report = True)
             except Exception as e:
-                print(f'error {e}')
-    
-            # exit()
+                logger.info(f'{os.path.basename(farm_path)} = {e}')    
             
         end = time.time()
         print(end-start)
         logger.info(end-start)
         exit()
         
-    
-    # else:
-    #     logger.info('no farms added')
-
-    # subprocess.call(["sh", "rsync_aws.sh"])
+         
+     
     
 

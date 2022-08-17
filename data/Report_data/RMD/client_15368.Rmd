@@ -213,9 +213,8 @@ if (avg_oc < standard_oc[1]) {
 \centering Location & \centering {`r comb`} \\
 \end{tblr}
 \thispagestyle{fancy}
-\fancyfoot[C]{\#201, 1st Floor Kundagol Complex, Hubli-29. Contact: 0836-3570088\\
-Email: Raitamitrasocialtrust@gmail.com
-}
+\fancyfoot[C]{\\office: 1st Floor, In front of Radha Fuel Services, Gola Road, Mohammadi, Kheri - 262804\\
+Contact:+91-8423783393 Email: office.ruralbusinesshub@gmail.com}
 \renewcommand{\headrulewidth}{0pt}%
 \renewcommand{\footrulewidth}{1pt}%
 
@@ -259,9 +258,8 @@ Maximum & {`r max_n`} & \\
 > 560 kg/ha (High)\\
 \end{tblr}
 \thispagestyle{fancy}
-\fancyfoot[C]{\#201, 1st Floor Kundagol Complex, Hubli-29. Contact: 0836-3570088\\
-Email: Raitamitrasocialtrust@gmail.com
-}
+\fancyfoot[C]{\\office: 1st Floor, In front of Radha Fuel Services, Gola Road, Mohammadi, Kheri - 262804\\
+Contact:+91-8423783393 Email: office.ruralbusinesshub@gmail.com}
 \renewcommand{\headrulewidth}{0pt}%
 \renewcommand{\footrulewidth}{1pt}%
 \newpage
@@ -305,8 +303,8 @@ Maximum & {`r max_p`} & \\
 > 24 kg/ha (High)\\
 \end{tblr}
 \thispagestyle{fancy}
-\fancyfoot[C]{\#201, 1st Floor Kundagol Complex, Hubli-29. Contact: 0836-3570088\\
-Email: Raitamitrasocialtrust@gmail.com}
+\fancyfoot[C]{\\office: 1st Floor, In front of Radha Fuel Services, Gola Road, Mohammadi, Kheri - 262804\\
+Contact:+91-8423783393 Email: office.ruralbusinesshub@gmail.com}
 \renewcommand{\headrulewidth}{0pt}%
 \renewcommand{\footrulewidth}{1pt}%
 \newpage
@@ -350,8 +348,8 @@ Maximum & {`r max_k`} & \\
 > 280 kg/ha (High)\\
 \end{tblr}
 \thispagestyle{fancy}
-\fancyfoot[C]{\#201, 1st Floor Kundagol Complex, Hubli-29. Contact: 0836-3570088\\
-Email: Raitamitrasocialtrust@gmail.com}
+\fancyfoot[C]{\\office: 1st Floor, In front of Radha Fuel Services, Gola Road, Mohammadi, Kheri - 262804\\
+Contact:+91-8423783393 Email: office.ruralbusinesshub@gmail.com}
 \renewcommand{\headrulewidth}{0pt}%
 \renewcommand{\footrulewidth}{1pt}%
 \newpage
@@ -394,8 +392,8 @@ Standard Soil Testing\\
 > 0.75\% (High)\\
 \end{tblr}
 \thispagestyle{fancy}
-\fancyfoot[C]{\#201, 1st Floor Kundagol Complex, Hubli-29. Contact: 0836-3570088\\
-Email: Raitamitrasocialtrust@gmail.com}
+\fancyfoot[C]{\\office: 1st Floor, In front of Radha Fuel Services, Gola Road, Mohammadi, Kheri - 262804\\
+Contact:+91-8423783393 Email: office.ruralbusinesshub@gmail.com}
 \renewcommand{\headrulewidth}{0pt}%
 \renewcommand{\footrulewidth}{1pt}%
 \newpage
@@ -432,8 +430,8 @@ Maximum & {`r max_ph`} & \\
 \end{footnotesize}
 
 \thispagestyle{fancy}
-\fancyfoot[C]{\#201, 1st Floor Kundagol Complex, Hubli-29. Contact: 0836-3570088\\
-Email: Raitamitrasocialtrust@gmail.com}
+\fancyfoot[C]{\\office: 1st Floor, In front of Radha Fuel Services, Gola Road, Mohammadi, Kheri - 262804\\
+Contact:+91-8423783393 Email: office.ruralbusinesshub@gmail.com}
 \renewcommand{\headrulewidth}{0pt}%
 \renewcommand{\footrulewidth}{1pt}%
 

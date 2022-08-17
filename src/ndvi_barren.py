@@ -76,7 +76,7 @@ def get_end_date(farm_path):
     # current_date = ee.Date(end)
     '''
     start_date = ee.Date(datetime.datetime.now() -
-                         datetime.timedelta(days=360))
+                         datetime.timedelta(days=180))
     current_date = ee.Date(datetime.datetime.now() -
                            datetime.timedelta(days=0))
 
@@ -92,18 +92,11 @@ def get_end_date(farm_path):
                       for key in smTimeSeries.getInfo()['features']}}
 
     df_sm = pd.DataFrame(sm_info)
-    df_sm = df_sm[df_sm.SM > 0]
+    df_sm = df_sm[(df_sm.SM > 0) & (df_sm.SM < 0.4)]
     df_sm.index = pd.to_datetime(df_sm.index, format='%Y-%m-%d')
-    # df_sm = df_sm.groupby(pd.Grouper(freq="M")).mean()['SM']
-    end_date = ''
-    # df_sm = df_sm[:-2]
+    end_date_lis = df_sm.index.tolist()
     
-    if df_sm[df_sm < 0.4].last_valid_index():
-        end_date = df_sm[df_sm < 0.4].last_valid_index()
-    else:
-        end_date = ''
-
-    return end_date
+    return end_date_lis
 
 
 if __name__ == "__main__":

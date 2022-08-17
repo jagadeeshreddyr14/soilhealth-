@@ -44,6 +44,8 @@ if (referal_code == '17684'){
     rmd.path <- "/home/satyukt/Projects/1000/soil_health/data/Report_data/RMD/client_17684.Rmd"
 } else if (referal_code == '15368'){
     rmd.path <- "/home/satyukt/Projects/1000/soil_health/data/Report_data/RMD/client_15368.Rmd"
+}else if (referal_code == 'kannada'){
+    rmd.path <- "/home/satyukt/Projects/1000/soil_health/data/Report_data/RMD/kannda_rep.Rmd"
 }else{
     rmd.path <- "/home/satyukt/Projects/1000/soil_health/data/Report_data/RMD/soil_health.Rmd"
 }

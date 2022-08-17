@@ -179,7 +179,6 @@ if (avg_oc < standard_oc[1]) {
 ```
 
 
-
 ```{=latex}
 \fancypagestyle{plain}{a4paper,inner=12mm,outer=10mm,top=5mm,bottom=15mm,footskip=5mm}
 \centering
