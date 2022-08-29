@@ -11,7 +11,9 @@ import configparser
 
 def read_farm(farm_path, setcrs=False):
 
-    geom = pd.read_csv(farm_path, header=None, sep='\n')
+    # geom = pd.read_csv(farm_path, header=None, sep='\n')
+    geom = pd.read_csv(farm_path, header=None, sep="\n+",engine ="python")
+    # geom = pd.read_csv(farm_path, header=None)
 
     farm_poly = gpd.GeoSeries.from_wkt(geom.iloc[:, 0])
 

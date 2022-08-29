@@ -1,1 +1,0 @@
-echo 's@tyukt123$' | sudo -S rsync -avhr -e "ssh -i /home/satyukt/Downloads/ssh/vati.pem" /home/satyukt/Projects/1000/soil_health/output/csv/* ubuntu@3.14.103.172:/home/ubuntu/apizzzzz/soil_data/soil_nutrients/

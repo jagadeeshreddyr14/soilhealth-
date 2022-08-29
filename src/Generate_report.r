@@ -38,7 +38,7 @@ referal_code <- args[3]
 #     cliprect = "viewport"
 # )
 
-
+# referal_code =
 
 if (referal_code == '17684'){
     rmd.path <- "/home/satyukt/Projects/1000/soil_health/data/Report_data/RMD/client_17684.Rmd"
@@ -49,7 +49,7 @@ if (referal_code == '17684'){
 }else{
     rmd.path <- "/home/satyukt/Projects/1000/soil_health/data/Report_data/RMD/soil_health.Rmd"
 }
-
+# rmd.path <- "/home/satyukt/Projects/1000/soil_health/data/Report_data/RMD/soil_health.Rmd"
 
 
 # Rmarkdown path

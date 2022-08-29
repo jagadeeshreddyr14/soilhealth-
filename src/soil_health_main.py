@@ -9,10 +9,9 @@ import numpy as np
 from rasterio.transform import from_origin
 from zonalstats import get_zonal_stats
 import time
-from subprocess import call
 from pyproj import Geod
 import configparser
-from subprocess import call,Popen,PIPE
+from subprocess import Popen,PIPE
 import atexit
 import sqlalchemy
 
@@ -85,6 +84,7 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
 
 def get_area(farm_path):
 
+    
     farm_poly = read_farm(farm_path).values[0]
     # specify a named ellipsoid: geodesic area
     geod = Geod(ellps="WGS84")
@@ -123,9 +123,9 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         process_png = False
 
     if os.path.exists(save_csv_stats):
-        return logger.info(f'file exists {farm_id}')
+        pass
+        # return logger.info(f'file exists {farm_id}')
     
-    logger.info(f'Process started for {farm_id}')
     
     ''' getting crop type and client id '''
     
@@ -143,10 +143,11 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
             s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
             uploadfile(local_path,s3path)  
             return logger.warning(f"Farm size small {farm_path}")
-    except:
-        logger.error(f"farm file is missing: {farm_id}")
+    except Exception as e:
+        logger.error(f"{farm_id} {e}")
         return
     
+    logger.info(f'Process started for {farm_id}')
     x_pt, y_pt, minx, maxy = generate_points(farm_path, pixel_size)
     len_y, len_x = len(y_pt.getInfo()), len(x_pt.getInfo())
     geometry = ee.FeatureCollection(x_pt.map(xcor(y_pt))).flatten()
@@ -204,13 +205,17 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     except Exception as e:
         referal_code = None
         print('no referal code')
+    # id_client = '17765'
 
     '''Generating report'''
-
-    if id_client == '17684':
+    if id_client == 17684:
         referal_code = '17684'
     
-    if report == True:
+    # if c == 17273:
+    #     referal_code = '15368'
+    # referal_code = '15368'
+    
+    if report == True and referal_code != '17684' :
         
         proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/Generate_report.r %s %s %s" %(farm_id, crop, referal_code)], shell=True,stdout=PIPE)
         proc.communicate()
@@ -282,7 +287,7 @@ if __name__ == "__main__":
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
     
     """
-    farm_path = "/home/satyukt/Projects/1000/area/30891.csv"
+    farm_path = "/home/satyukt/Projects/1000/area/56570.csv"
     compute_soil_health(farm_path, pixel_size, input_bands,
                                     soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report = True)
     """
@@ -302,6 +307,23 @@ if __name__ == "__main__":
         print(end-start)
         logger.info(end-start)
         exit()
+    
+        
+    
+    
+
+   
+        
+    
+    
+        
+    
+        
+    
+        
+        
+        
+    
         
          
      
