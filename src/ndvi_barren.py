@@ -67,21 +67,23 @@ def get_end_date(farm_path):
         features = get_ee_Geometry(farm_path)
     except Exception as e:
         return
-    '''
-    # date = datetime.datetime.strptime('1-06-2022', "%d-%m-%Y")
+    ''' 
+    date = datetime.datetime.strptime('1-05-2022', "%d-%m-%Y")
+    
+    
+    day = 60
+    start = date - datetime.timedelta(days=day)
+    end = date + datetime.timedelta(days=day)
 
-    # day = 5
-    # start = date - datetime.timedelta(days=day)
-    # end = date + datetime.timedelta(days=day)
-
-    # start_date = ee.Date(start)
-    # current_date = ee.Date(end)
+    start_date = ee.Date(start)
+    current_date = ee.Date(end)
     '''
     start_date = ee.Date(datetime.datetime.now() -
                          datetime.timedelta(days=180))
     current_date = ee.Date(datetime.datetime.now() -
                            datetime.timedelta(days=0))
-
+  
+    
     imageCollection = ee.ImageCollection("COPERNICUS/S2_SR")\
                         .filterDate(start_date, current_date)\
                         .filterBounds(features.geometry())\

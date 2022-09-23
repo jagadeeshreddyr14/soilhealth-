@@ -164,7 +164,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         except:
             continue
     else: 
-        local_path = f'/home/satyukt/Projects/1000/soil_health/data/Report_data/nodata/odata.pdf'
+        local_path = f'/home/satyukt/Projects/1000/soil_health/data/Report_data/nodata/Nodata.pdf'
         s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
         uploadfile(local_path,s3path)
         logger.info( 'No bands available')
@@ -205,8 +205,9 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     except Exception as e:
         referal_code = None
         print('no referal code')
-    # id_client = '17765'
-
+    # id_client = '18187'
+    # crop = ''
+    
     '''Generating report'''
     if id_client == 17684:
         referal_code = '17684'
@@ -272,12 +273,12 @@ if __name__ == "__main__":
 
     
     nuts_ranges = {
-        'N': (100, 300),
-        'P': (5, 50),
-        'K': (100, 250),
-        'pH': (6, 8.5),
-        'OC': (0.3, 0.75)
-    }
+        'N': (100, 300), #280 - 560
+        'P': (5, 50),  #22.4 - 56.0
+        'K': (100, 250), #135 - 336
+        'pH': (6, 8.5), #6.5 - 7.5
+        'OC': (0.3, 0.75) #0.50 - 0.75
+    } 
 
     pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
     input_bands = ['B8', 'B4', 'B5', 'B11', 'B9', 'B1',
@@ -287,9 +288,11 @@ if __name__ == "__main__":
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
     
     """
-    farm_path = "/home/satyukt/Projects/1000/area/56570.csv"
+    
+    farm_path = "/home/satyukt/Projects/1000/area/57309.csv"
     compute_soil_health(farm_path, pixel_size, input_bands,
                                     soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report = True)
+    
     """
     check,list1 = gcp_check()
     if check == True:
@@ -307,6 +310,27 @@ if __name__ == "__main__":
         print(end-start)
         logger.info(end-start)
         exit()
+     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        
+    
+    
+    
+    
+    
+    
+        
+    
     
         
     
