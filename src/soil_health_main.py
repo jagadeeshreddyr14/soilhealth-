@@ -205,7 +205,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     except Exception as e:
         referal_code = None
         print('no referal code')
-    # id_client = '18187'
+    # id_client = '18178'
     # crop = ''
     
     '''Generating report'''
@@ -287,9 +287,11 @@ if __name__ == "__main__":
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
     
+    
+    
     """
     
-    farm_path = "/home/satyukt/Projects/1000/area/57309.csv"
+    farm_path = "/home/satyukt/Projects/1000/area/57461.csv"
     compute_soil_health(farm_path, pixel_size, input_bands,
                                     soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report = True)
     
@@ -310,7 +312,6 @@ if __name__ == "__main__":
         print(end-start)
         logger.info(end-start)
         exit()
-     
     
     
     
