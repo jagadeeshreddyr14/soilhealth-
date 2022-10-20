@@ -75,13 +75,6 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
     return None
 
 
-# def save_empty_csv(path_csv):
-
-#     dfl = pd.DataFrame(columns=['K', 'N', 'P', 'OC', 'pH', 'date'], index=[
-#                        'average', 'min', 'max'])
-
-#     dfl.to_csv(path_csv)
-
 def get_area(farm_path):
 
     
@@ -132,7 +125,6 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     if client_info:
         client_data = pd.read_csv(client_info)
         try:
-            not_crop = ['Agarwood', 'Coconut', 'Mango', 'Avocado', ]
             crop,id_client = client_data.loc[(client_data['polygon_id'] == int(farm_id)),['croptype','client_id']].values[0]
         except:
             pass
@@ -155,6 +147,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     
     for ind,end_date in reversed(list(enumerate(end_date_lis))):
         start_date = end_date - datetime.timedelta(days=30)
+        mid_date = end_date - datetime.timedelta(days=15)
         predictor_bands = get_predictor_bands(geometry, start_date, end_date)
         try:
             df = getDataFrame(predictor_bands, pred_bands, geometry)
@@ -179,22 +172,23 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
 
         try:
             gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, save_path_tiff, transform,
-                                 farm_id, len_y, len_x, start_date)
-        except: 
-            print('error while generating tiff')
+                                 farm_id, len_y, len_x, mid_date)
+        except Exception as e:
+            
+            print(e)
             return
 
     
     '''Generating PNG'''
     if process_png:
 
-        create_png(farm_path, farm_id, save_path_tiff,
+        create_png(farm_path, farm_id, save_path_tiff, mid_date,
                    nuts_ranges, save_path_png)
         
     '''Generating CSV(NPK)'''
     if process_csv:
         zonal_stats = get_zonal_stats(farm_path, save_path_tiff)
-        format_zonal_stats(zonal_stats, farm_id, start_date,
+        format_zonal_stats(zonal_stats, farm_id, mid_date,
                            path_csv, save_as_csv=True)
     
     '''get referal_code'''
@@ -205,16 +199,13 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     except Exception as e:
         referal_code = None
         print('no referal code')
-    # id_client = '18178'
-    # crop = ''
+
     
     '''Generating report'''
     if id_client == 17684:
         referal_code = '17684'
     
-    # if c == 17273:
-    #     referal_code = '15368'
-    # referal_code = '15368'
+
     
     if report == True and referal_code != '17684' :
         
@@ -229,7 +220,7 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
         
         '''Push to S3'''
-        uploadfile(local_path,s3path)
+        # uploadfile(local_path,s3path)
         logger.info(f'pushed to aws {id_client} = {farm_id}')
         print(f'pushed to s3 {farm_id}')
         
@@ -286,12 +277,10 @@ if __name__ == "__main__":
 
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
-    
-    
-    
+
     """
     
-    farm_path = "/home/satyukt/Projects/1000/area/57461.csv"
+    farm_path = "/home/satyukt/Projects/1000/area/58244.csv"
     compute_soil_health(farm_path, pixel_size, input_bands,
                                     soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report = True)
     

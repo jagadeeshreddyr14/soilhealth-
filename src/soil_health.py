@@ -114,10 +114,8 @@ def convolve_mapping(x):
 
 
 def fillNA(img):
-    #img = rio.open(img)
-    #ras = img.read(1)
+
     tmp_img = img
-    # window_1 = np.array()
     window_1 = ndimage.generic_filter(
         tmp_img, function=convolve_mapping, footprint=np.ones((3, 3)), mode='nearest')
     while True:
@@ -125,17 +123,19 @@ def fillNA(img):
             window_1, function=convolve_mapping, footprint=np.ones((3, 3)), mode='nearest')
         if ~np.any(np.isnan(window_1) == True):
             break
-    # return show(window_1)
     return window_1
 
 
 def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
 
     file_name = os.path.basename(nut).split('.')[0]
-    # farm_dir = f"{save_path_tiff}/{farm_id}"
     str_date = start_date.date().strftime("%Y%m%d")
-    out_path = os.path.join(
-        save_path_tiff, f"{farm_id}_{str_date}_{file_name}.tif")
+    median_val = np.nanmedian(data_array)
+    min_val = 0.75 * median_val
+    max_val = 1.25 * median_val
+    data_array[data_array < min_val] = np.nan
+    data_array[data_array > max_val] = np.nan
+    data_array = fillNA(data_array)
     options = {
         "driver": "Gtiff",
         "height": data_array.shape[0],
@@ -145,12 +145,14 @@ def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
         "crs": 'EPSG:4326',
         "transform": transform
     }
+    
+    out_path = os.path.join(save_path_tiff, f"{farm_id}_{str_date}_{file_name}.tif")
+    
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    # if not os.path.exists(save_path_tiff):
-    #     os.mkdir(save_path_tiff)
+
 
     with rs.open(out_path, 'w', **options) as src:
-        src.write(fillNA(data_array), 1)
+        src.write(data_array, 1)
 
 
 if __name__ == "__main__":
