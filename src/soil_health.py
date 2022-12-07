@@ -126,10 +126,33 @@ def fillNA(img):
     return window_1
 
 
-def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
+def saveTiff(nut, data_array, transform, farm_id, start_date, save_path_tiff):
 
     file_name = os.path.basename(nut).split('.')[0]
     str_date = start_date.date().strftime("%Y%m%d")
+    
+    
+
+    N, P , K, OC, ph = 1,1,1,1,1
+    # N, P , K, OC, ph = 0.4, 0.4, 0.8, 2.2, 0.8
+
+    if os.path.basename(nut) == 'N.pkl':
+        data_array *= N
+        # 
+    if os.path.basename(nut) == 'P.pkl':
+        data_array *= P
+        
+    if os.path.basename(nut) == 'K.pkl':
+        data_array *=  K
+        
+    if os.path.basename(nut) == 'OC.pkl':
+        data_array *= OC
+        
+    if os.path.basename(nut) == 'pH.pkl':
+        data_array *= ph
+
+
+      
     median_val = np.nanmedian(data_array)
     min_val = 0.75 * median_val
     max_val = 1.25 * median_val
@@ -146,10 +169,9 @@ def saveTiff(nut, save_path_tiff, data_array, transform, farm_id, start_date):
         "transform": transform
     }
     
-    out_path = os.path.join(save_path_tiff, f"{farm_id}_{str_date}_{file_name}.tif")
+    out_path = os.path.join(save_path_tiff, farm_id,f"{farm_id}_{str_date}_{file_name}.tif")
     
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-
 
     with rs.open(out_path, 'w', **options) as src:
         src.write(data_array, 1)
@@ -160,7 +182,7 @@ if __name__ == "__main__":
     # Initialize the library.
     ee.Initialize()
     dirname = os.path.dirname(os.path.abspath(__file__))
-    x = os.chdir(dirname)
+    os.chdir(dirname)
 
     config = configparser.ConfigParser()
     config.read('../Config/config.ini')
@@ -174,7 +196,7 @@ if __name__ == "__main__":
     farm_id = '20'
     farm_path = f'{area_path}{farm_id}.csv'
 
-    pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
+    pixel_size = 0.000277777778  # 30 meter by 3 -> 10 meter
 
     end_date = get_end_date(farm_id)
     start_date = end_date - datetime.timedelta(days=30)
@@ -214,3 +236,9 @@ if __name__ == "__main__":
 
     zonal_stats = get_zonal_stats(farm_path, f"{save_path_tiff}/{farm_id}")
     print(zonal_stats)
+
+
+
+        
+        
+        

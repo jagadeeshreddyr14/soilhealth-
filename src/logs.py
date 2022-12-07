@@ -8,10 +8,9 @@ class MyLogger:
         self.module_name = module_name
         self.filename = filename
         self.logging_level = logging_level
-
-        if not os.path.exists(log_path):
-            # os.makedir(log_path)
-            os.system(f'sudo mkdir {log_path}')
+        # self.log_path = log
+        os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+                
 
     def create_logs(self):
         # create logger on the current module and set its level
@@ -35,9 +34,7 @@ class MyLogger:
         stream_handler = logging.StreamHandler()
         # stream_handler.setFormatter(formatter)
 
-        # connect the logger to the channel
-        # stream_handler.setLevel(self.logging_level)
-        # logger.addHandler(stream_handler)
+
         if (logger.hasHandlers()):
             logger.handlers.clear()
 
@@ -46,3 +43,14 @@ class MyLogger:
         return logger
     
     
+if __name__ == "__main__":
+    
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(dirname)
+    
+    logger = MyLogger(module_name=__name__,
+                    filename="../logs/soil_health.log").create_logs()
+    
+    
+    logger.info('hello')
+    logger.info('yes')

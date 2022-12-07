@@ -1,3 +1,4 @@
+from importlib.resources import path
 from regex import E
 from logs import MyLogger
 import ee
@@ -13,26 +14,19 @@ from pyproj import Geod
 import configparser
 from subprocess import Popen,PIPE
 import atexit
-import sqlalchemy
-
-
+import ast
+from shapely.geometry import shape
+import requests
 
 from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff
 from ndvi_barren import get_end_date, read_farm
 from _push_s3 import uploadfile
 from _create_png import create_png
 from _fetch_gcp import gcp_check
+from _get_detials import get_info
 
 import warnings
 warnings.filterwarnings("ignore")
-
-'''Getting referral code from gcp'''
-dbname="sat2farmdb"
-user="remote"
-password="satelite"
-host="34.125.75.120"
-port=3306
-engine = sqlalchemy.create_engine(f"mysql+pymysql://{user}:{password}@{host}:{port}/{dbname}")
 
 
 
@@ -44,6 +38,24 @@ def roundoff(x):
     else:
         return x
 
+def reverse_geocode(farm_path):
+    
+    pjson = read_farm(farm_path)
+    value = pjson[0].centroid
+    req = requests.get(
+        f"https://nominatim.openstreetmap.org/reverse?lon={value.x}&lat={value.y}&format=jsonv2"
+    )
+    data = req.json()
+    try:
+        state = data["address"]['state']
+    except:
+        pass
+    try:
+        district = data['address']['state_district'].replace('Urban','').replace(' ','')
+    except:
+        district= data['address']['city_district'].replace('Urban','').replace(' ','')
+        
+    return district, state
 
 def gen_raster_save_tiff(nut, nut_slr, df_pred, df_temp, path_tiff, transform, farmid, leny, lenx, start_date):
 
@@ -54,12 +66,12 @@ def gen_raster_save_tiff(nut, nut_slr, df_pred, df_temp, path_tiff, transform, f
                       right_index=True, how='left')['prediction']
     data_array = df_out.values.reshape(leny, lenx)
     data_array = np.flip(data_array, axis=0)
-    saveTiff(nut, path_tiff, data_array, transform, farmid, start_date)
+    saveTiff(nut, data_array, transform, farmid, start_date, path_tiff)
 
     return None
 
 
-def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/', save_as_csv=False):
+def format_zonal_stats(zonalstats, farmid, startdate, path_csv, save_as_csv=False):
 
     zonalstats_tmp = zonalstats.copy()
     zonalstats_tmp['date'] = startdate
@@ -68,12 +80,15 @@ def format_zonal_stats(zonalstats, farmid, startdate, path_csv='../output/csv/',
                       'percentile_95': 'max'}, inplace=True)
 
     dfl = dfl.apply(lambda x: roundoff(x))
-        
+    
+    path = os.path.join(path_csv,f"{farmid}.csv")
+    
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    
     if save_as_csv:
-        dfl.to_csv(f"{path_csv}/{farmid}.csv")
+        dfl.to_csv(path)
 
     return None
-
 
 def get_area(farm_path):
 
@@ -90,54 +105,52 @@ def get_path(param, fdr_name):
     nslr = glob.glob(f"{model_path + fdr_name[1]}/{param}*.pkl")[0]
     return nnut, nslr
 
-def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_ranges, path_tiff, path_png=None,
-                        path_csv=None, client_info=None, report = False):
+def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_ranges,save_path_tiff,\
+                        save_path_png , save_path_csv, report = True, push_s3 = False):
+    
 
     global logger
     logger = MyLogger(module_name=__name__,
                       filename="../logs/soil_health.log").create_logs()
+    
     '''
     main function we pass input farm in csv(polygon values)
     '''
 
-    farm_id = os.path.basename(farm_path).split(".")[0]
-    save_path_tiff = os.path.join(path_tiff, f"{farm_id}")
-
-    if path_csv:
-        save_csv_stats = os.path.join(path_csv, f"{farm_id}.csv")
-        process_csv = True
+    if isinstance(farm_path, str):
+        farm_id = os.path.basename(farm_path).split('.')[0]
+        con = False
     else:
-        process_csv = False
+        con = True
+        farm_id = str(farm_path)
 
-    if path_png:
-        save_path_png = os.path.join(path_png, f"{farm_id}")
-        process_png = True
-    else:
-        process_png = False
+    report_path = f'../output/Report/{farm_id}.pdf'
+    
+    if os.path.exists(report_path):
+        logger.info(f'{farm_id} - report exists')
+        print(f'{farm_id} - report exists')
+        # return 
 
-    if os.path.exists(save_csv_stats):
-        pass
-        # return logger.info(f'file exists {farm_id}')
-    
-    
-    ''' getting crop type and client id '''
-    
-    if client_info:
-        client_data = pd.read_csv(client_info)
-        try:
-            crop,id_client = client_data.loc[(client_data['polygon_id'] == int(farm_id)),['croptype','client_id']].values[0]
-        except:
-            pass
-
+    ''' getting farm detail'''        
     try:
-        if get_area(farm_path) < 150:
-            local_path = f'/home/satyukt/Projects/1000/soil_health/data/Report_data/nodata/Farmsmall.pdf'
-            s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
-            uploadfile(local_path,s3path)  
-            return logger.warning(f"Farm size small {farm_path}")
+        df, referal_code = get_info(int(farm_id))
+        id_client, poly, crop = df
+
+        if con == True:
+                poly = poly.replace("'", '"')
+                cords = ast.literal_eval(poly)
+                farm_path = shape(cords["geo_json"]["geometry"])
     except Exception as e:
-        logger.error(f"{farm_id} {e}")
-        return
+        logger.error(f'{farm_id} = {e} ')
+        return 
+        
+        
+    if get_area(farm_path) < 150:
+        local_path = f'../data/Report_data/nodata/Farmsmall.pdf'
+        s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
+        uploadfile(local_path,s3path)  
+        return logger.warning(f"Farm size small {farm_id}")
+
     
     logger.info(f'Process started for {farm_id}')
     x_pt, y_pt, minx, maxy = generate_points(farm_path, pixel_size)
@@ -157,11 +170,12 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
         except:
             continue
     else: 
-        local_path = f'/home/satyukt/Projects/1000/soil_health/data/Report_data/nodata/Nodata.pdf'
+        local_path = f'../data/Report_data/nodata/Nodata.pdf'
         s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
         uploadfile(local_path,s3path)
         logger.info( 'No bands available')
-        return
+        
+        return 
         
     df_tmp = df[["longitude", "latitude"]]
     df_pred = df.loc[df['NDWI'].notna(), pred_bands]
@@ -170,63 +184,49 @@ def compute_soil_health(farm_path, pixel_size, pred_bands, soil_nutrients, nuts_
     '''Generating raster(tiff)'''
     for nut, nut_slr in soil_nutrients:
 
-        try:
-            gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, save_path_tiff, transform,
-                                 farm_id, len_y, len_x, mid_date)
-        except Exception as e:
-            
-            print(e)
-            return
 
-    
-    '''Generating PNG'''
-    if process_png:
+        gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, save_path_tiff, transform,
+                                farm_id, len_y, len_x, mid_date)
 
-        create_png(farm_path, farm_id, save_path_tiff, mid_date,
-                   nuts_ranges, save_path_png)
+    """Generating PNG"""
+
+    create_png(farm_path, farm_id, save_path_tiff, mid_date,
+                nuts_ranges, save_path_png)
         
     '''Generating CSV(NPK)'''
-    if process_csv:
-        zonal_stats = get_zonal_stats(farm_path, save_path_tiff)
-        format_zonal_stats(zonal_stats, farm_id, mid_date,
-                           path_csv, save_as_csv=True)
-    
-    '''get referal_code'''
-    try:
-        referal_code = pd.read_sql_query(f"select referal_code from user_details where mobile_no in (select user_name from user_credentials where user_id in \
-                        (select clientID from polygonStore where id={farm_id}))",engine).values[0]
-        
-    except Exception as e:
-        referal_code = None
-        print('no referal code')
 
+    zonal_stats = get_zonal_stats(farm_path, farm_id, save_path_tiff)
     
-    '''Generating report'''
-    if id_client == 17684:
-        referal_code = '17684'
+    format_zonal_stats(zonal_stats, farm_id, mid_date,
+                        save_path_csv, save_as_csv=True)
     
-
-    
-    if report == True and referal_code != '17684' :
+    '''lat and long for reverse geocode'''
         
-        proc = Popen(["R --vanilla --args < /home/satyukt/Projects/1000/soil_health/src/Generate_report.r %s %s %s" %(farm_id, crop, referal_code)], shell=True,stdout=PIPE)
+    lat = read_farm(farm_path).centroid[0].y
+    long = read_farm(farm_path).centroid[0].x
+    
+    fid = f"{farm_id}_{datetime.datetime.now().strftime('%Y%m%dY%H%M%S')}"
+    
+    if report == True and referal_code!= '17684':
+        
+        proc = Popen(["R --vanilla --args < GenerateReport.R %s %s %s %s %s" %(fid, crop, referal_code, lat, long)], shell=True,stdout=PIPE)
         proc.communicate()
         atexit.register(proc.terminate)
-        pid = proc.pid
+        proc.pid
+        logger.info('report generated')
 
+    if push_s3 == True:  
         
-        local_path = f'/home/satyukt/Projects/1000/soil_health/output/Report/{farm_id}.pdf'
-
-        s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
+        local_path = f'../output/Report/{fid}.pdf'
+        
+        s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{fid}.pdf'
         
         '''Push to S3'''
-        # uploadfile(local_path,s3path)
+        uploadfile(local_path,s3path)
         logger.info(f'pushed to aws {id_client} = {farm_id}')
-        print(f'pushed to s3 {farm_id}')
         
     
     return None
-
 
 if __name__ == "__main__":
 
@@ -244,64 +244,49 @@ if __name__ == "__main__":
     area_path = config['Default']['area_path']
     model_path = config['Default']['model_path']
 
+    gcp_path = config['Default']['gcp_path']
     path_tiff = config['Output_path']['path_tiff']
     path_csv = config['Output_path']['path_csv']
     path_png = config['Output_path']['path_png']
 
     client_info = config['aws']['client_info']
-    # client_info = None
-    if not os.path.exists(path_tiff):
-        os.makedirs(path_tiff)
 
-    if not os.path.exists(path_csv):
-        os.makedirs(path_csv)
-
-    if not os.path.exists(path_png):
-        os.makedirs(path_png)
-        
     logger = MyLogger(module_name=__name__,
                       filename="../logs/soil_health.log").create_logs()
 
     
     nuts_ranges = {
-        'N': (100, 300), #280 - 560
+        'N': (100, 300), #100 - 300
         'P': (5, 50),  #22.4 - 56.0
-        'K': (100, 250), #135 - 336
-        'pH': (6, 8.5), #6.5 - 7.5
-        'OC': (0.3, 0.75) #0.50 - 0.75
+        'K': (100, 250), #100 - 400
+        'pH': (6.5, 7.5), #6.5 - 7.5
+        'OC': (0.3, 0.75) #0.3 - 0.75
     } 
 
-    pixel_size = 0.000277777778/3  # 30 meter by 3 -> 10 meter
+    pixel_size = 0.000277777778/3 # 30 meter by 3 -> 10 meter
     input_bands = ['B8', 'B4', 'B5', 'B11', 'B9', 'B1',
                    'SR_n2', 'SR_N', 'TBVI1', 'NDWI', 'NDVI_G']
 
     soil_nuts = [get_path(param, ["ml", "slr"])
                  for param in ['pH', 'P', 'K', 'OC', 'N']]
-
-    """
     
-    farm_path = "/home/satyukt/Projects/1000/area/58244.csv"
-    compute_soil_health(farm_path, pixel_size, input_bands,
-                                    soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report = True)
-    
-    """
-    check,list1 = gcp_check()
+    check, farm_list, data = gcp_check(gcp_path)
     if check == True:
-        farm_list = [os.path.join(area_path,f"{farm}.csv") for farm in list1]
 
-        for i, farm_path in enumerate(farm_list):
+        for ind, farm in enumerate(farm_list):
 
             try:
-                compute_soil_health(farm_path, pixel_size, input_bands,
-                                    soil_nuts, nuts_ranges, path_tiff, path_png, path_csv, client_info,report = True)
+                compute_soil_health(farm, pixel_size, input_bands,soil_nuts, nuts_ranges, 
+                                    path_tiff, path_png, path_csv, client_info = None, report = True, push_s3 = True)
             except Exception as e:
-                logger.info(f'{os.path.basename(farm_path)} = {e}')    
+                logger.error(f'{farm} = {e}')
+        data.to_csv(gcp_path)
             
         end = time.time()
         print(end-start)
-        logger.info(end-start)
-        exit()
-    
+    else:
+        print('no farms')
+
     
     
     

@@ -6,9 +6,7 @@ from matplotlib import colors
 import shapely
 import geopandas as gpd
 from shapely.geometry import Polygon
-import datetime
 import numpy as np
-from scipy import ndimage
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -17,12 +15,17 @@ import matplotlib.pyplot as plt
 
 
 def create_png(farm_path, farm_id, tif_path, plt_date, nuts_ranges, png_save_path):
+    
+    tif_loc = os.path.join(tif_path, farm_id)
+    
+    tif_files = glob.glob(f"{tif_loc}/*")
 
-    tif_files = glob.glob(f"{tif_path}/*")
-
-    file = open(farm_path, "r")
-    footprint = file.read()
-    file.close()
+    if isinstance(farm_path, str):
+        file = open(farm_path, "r")
+        footprint = file.read()
+        file.close
+    else:
+        footprint = farm_path.wkt
 
     shapely_poly = shapely.wkt.loads(footprint)
     crs = {'init': 'epsg:4326'}
@@ -86,9 +89,12 @@ def create_png(farm_path, farm_id, tif_path, plt_date, nuts_ranges, png_save_pat
         fig.suptitle(
             f"{png_title}\n{plt_date.date()}", ha='center', fontsize='20', va='top', fontweight='bold', fontstyle='normal')
         plt.axis('off')
-        if not os.path.exists(png_save_path):
-            os.makedirs(png_save_path)
-        plt.savefig(f"{png_save_path}/{farm_id}_{nut}.png")
+        
+        png_save = os.path.join(png_save_path,farm_id,f"{farm_id}_{nut}.png")
+        
+        os.makedirs(os.path.dirname(png_save), exist_ok=True)
+
+        plt.savefig(png_save)
 
 
 if __name__ == "__main__":

@@ -6,11 +6,11 @@ from glob import glob
 from ndvi_barren import get_py_geometry
 
 
-def get_zonal_stats(farm_path, raster_path):
-
+def get_zonal_stats(farm_path, farm_id, raster_path):
+    
+    raster_loc = os.path.join(raster_path, farm_id)
     feat = get_py_geometry(farm_path)
-    raster_images = glob(f"{raster_path}/*")
-    # raster_images = glob(f"/home/satyukt/Projects/1000/soil_health/output/sat2credit/tif/1616/*")
+    raster_images = glob(f"{raster_loc}/*")
     soil_nutrients = {}
     for raster_image in raster_images:
 

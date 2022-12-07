@@ -1,7 +1,7 @@
 import sqlalchemy
 import pandas as pd
 
-def gcp_check():
+def gcp_check(path):
     
     dbname="sat2farmdb"
     user="remote"
@@ -13,14 +13,8 @@ def gcp_check():
     engine = sqlalchemy.create_engine(f"mysql+pymysql://{user}:{password}@{host}:{port}/{dbname}")
 
 
-    # try:
-    #    engine.connect()
-    # except sqlalchemy.exc.SQLAlchemyError as e:
-    #     print(e)
-        
-    old = pd.read_csv('/home/satyukt/Projects/1000/aws/soil_health_info/gcp_info.csv')
+    old = pd.read_csv(path)
 
-    # engine.connect()
 
     results = pd.read_sql_query(
             "select farm_id from paymentGateway ", engine)
@@ -31,15 +25,17 @@ def gcp_check():
     if len(old)<len(results):
         result = results.tail(len(results)-len(old))
         farm_list = result['farm_id'].values.tolist()
-        results.to_csv('/home/satyukt/Projects/1000/aws/soil_health_info/gcp_info.csv')
+        # results.to_csv('/home/satyukt/Projects/1000/aws/soil_health_info/gcp_info.csv')
         
-        return True,farm_list
+        return True, farm_list, results
     
-    return False,farm_list
+    return False, farm_list, results
         
         
+if __name__=="__main__":
     
-    
+    path = '/home/satyukt/Projects/1000/aws/soil_health_info/gcp_info.csv'
+    gcp_check(path)
     # results.tail[len(results)-len(old)]
     # print(results)
 
@@ -53,9 +49,6 @@ def gcp_check():
 
 
 
-if __name__ == "__main__": 
-    
-    
-    gcp_check()
+
     
     

@@ -7,13 +7,16 @@ import geopandas as gpd
 import os
 import datetime
 import configparser
-
+import shapely.wkt
 
 def read_farm(farm_path, setcrs=False):
 
-    geom = pd.read_csv(farm_path, header=None, sep="\n+",engine ="python")
-
-    farm_poly = gpd.GeoSeries.from_wkt(geom.iloc[:, 0])
+    if isinstance(farm_path,str):
+        geom = pd.read_csv(farm_path, header=None, sep="\n+",engine ="python")
+        farm_poly = gpd.GeoSeries.from_wkt(geom.iloc[:, 0])
+    else:
+        geom = shapely.wkt.loads(farm_path.wkt)
+        farm_poly = gpd.GeoSeries([geom])
 
     if setcrs:
         return farm_poly.set_crs("EPSG:4326")
@@ -63,12 +66,21 @@ def get_end_date(farm_path):
 
     
     features = get_ee_Geometry(farm_path)
-
+    
 
     start_date = ee.Date(datetime.datetime.now() -
                          datetime.timedelta(days=180))
     current_date = ee.Date(datetime.datetime.now() -
                            datetime.timedelta(days=0))
+    
+    
+    # data = pd.read_csv('/home/satyukt/Downloads/mahindra.csv')
+    # date = data.loc[data['Farm id']==int(farm_id),'Date of testing (GROUND)'].values[0]
+    # date = datetime.datetime.strptime(date, "%d-%m-%Y")
+
+    # day = 30
+    # start_date = date - datetime.timedelta(days=day)
+    # current_date = date + datetime.timedelta(days=day)
   
     
     imageCollection = ee.ImageCollection("COPERNICUS/S2_SR")\
@@ -85,8 +97,8 @@ def get_end_date(farm_path):
     df_sm = pd.DataFrame(sm_info)
     df_sm = df_sm[(df_sm.SM > 0) & (df_sm.SM < 0.4)]
     df_sm.index = pd.to_datetime(df_sm.index, format='%Y-%m-%d')
+
     end_date_lis = df_sm.index.tolist()
-    
     return end_date_lis
 
 
@@ -98,7 +110,7 @@ if __name__ == "__main__":
 
     os.chdir(dirname)
 
-    farm_id = 10973
+    farm_id = 60758
     config = configparser.ConfigParser()
     config.read('../Config/config.ini')
 
