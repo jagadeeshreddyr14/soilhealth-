@@ -38,7 +38,7 @@ def roundoff(x):
         return x
 
 
-def gen_raster_save_tiff(nut, nut_slr, df_pred, df_temp, transform, farmid, leny, lenx):
+def gen_raster_save_tiff(nut, nut_slr, df_pred, df_temp, transform, farmid, leny, lenx, cf):
 
     df_cpy = df_pred.copy()
     predictions = genPredictions(nut, nut_slr, df_cpy.values)
@@ -47,7 +47,7 @@ def gen_raster_save_tiff(nut, nut_slr, df_pred, df_temp, transform, farmid, leny
                       right_index=True, how='left')['prediction']
     data_array = df_out.values.reshape(leny, lenx)
     data_array = np.flip(data_array, axis=0)
-    saveTiff(nut, data_array, transform, farmid)
+    saveTiff(nut, data_array, transform, farmid, cf)
 
     return None
 
@@ -85,7 +85,7 @@ def get_path(param, fdr_name):
     nslr = glob.glob(f"{model_path + fdr_name[1]}/{param}*.pkl")[0]
     return nnut, nslr
 
-def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_ranges, report = False, push_s3 = False):
+def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_ranges, cf, report = False, push_s3 = False):
     
 
     global logger
@@ -119,13 +119,13 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
         if con == True:
                 poly = poly.replace("'", '"')
                 cords = ast.literal_eval(poly)
-                farm_path = shape(cords["geo_json"]["geometry"])
+                farm_cor = shape(cords["geo_json"]["geometry"])
     except Exception as e:
         logger.error(f'{farm_id} = {e} ')
         return 
         
         
-    if get_area(farm_path) < 150:
+    if get_area(farm_cor) < 150:
         local_path = f'../data/Report_data/nodata/Farmsmall.pdf'
         s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
         uploadfile(local_path,s3path)  
@@ -133,10 +133,10 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
 
     
     logger.info(f'Process started for {farm_id}')
-    x_pt, y_pt, minx, maxy = generate_points(farm_path, pixel_size)
+    x_pt, y_pt, minx, maxy = generate_points(farm_cor, pixel_size)
     len_y, len_x = len(y_pt.getInfo()), len(x_pt.getInfo())
     geometry = ee.FeatureCollection(x_pt.map(xcor(y_pt))).flatten()
-    end_date_lis = get_end_date(farm_path)
+    end_date_lis = get_end_date(farm_cor)
     
     for ind,end_date in reversed(list(enumerate(end_date_lis))):
         start_date = end_date - datetime.timedelta(days=30)
@@ -166,9 +166,9 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
 
 
         gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, transform,
-                                farm_id, len_y, len_x)
+                                farm_id, len_y, len_x, cf)
 
-    zonal_stats = get_zonal_stats(farm_path, farm_id)
+    zonal_stats = get_zonal_stats(farm_cor, farm_id)
     
     format_zonal_stats(zonal_stats, farm_id, mid_date)
     
@@ -176,7 +176,7 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
     png = True
     if png == True:
     
-        create_png(farm_path, farm_id, mid_date,
+        create_png(farm_cor, farm_id, mid_date,
                     nuts_ranges)
         
     '''Generating CSV(NPK)'''
@@ -184,8 +184,8 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
     
     '''lat and long for reverse geocode'''
         
-    lat = read_farm(farm_path).centroid[0].y
-    long = read_farm(farm_path).centroid[0].x
+    lat = read_farm(farm_cor).centroid[0].y
+    long = read_farm(farm_cor).centroid[0].x
         
     if report == True and referal_code!= '17684':
         

@@ -126,13 +126,11 @@ def fillNA(img):
     return window_1
 
 
-def saveTiff(nut, data_array, transform, farm_id):
+def saveTiff(nut, data_array, transform, farm_id, cf):
 
     nut = os.path.basename(nut).split('.')[0]
     
-    # N, P , K, OC, ph =  0.4, 0.4, 0.8, 2.2, 0.8
-    # 
-    N, P, K, OC, ph = 1, 1 ,1, 1, 1
+    N, P , K, OC, ph = cf
 
     if os.path.basename(nut) == 'N':
         data_array *= N

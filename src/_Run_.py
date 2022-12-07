@@ -44,9 +44,13 @@ def run(farm_cor):
     soil_nuts = [get_path(param, ["ml", "slr"])
                 for param in ['pH', 'P', 'K', 'OC', 'N']]
     
+    cf = (1, 1, 5, 1 ,1) 
+    
     try:
     
-        compute_soil_health(farm_cor, pixel_size, input_bands, soil_nuts, nuts_ranges, report = True, push_s3 = False)
+        compute_soil_health(farm_cor, pixel_size, input_bands, soil_nuts, nuts_ranges, cf,
+                            report = True, push_s3 = False)
+        
     except Exception as e:
         logger.info(f"{e}")
         
@@ -63,7 +67,7 @@ if __name__ == "__main__":
         Delete_files(int(args.fid))
         run(int(args.fid))
     else:
-        farm_list  = [60528]
+        farm_list  = [4471]
         for i in farm_list:   
             Delete_files(i) 
             run(i)
