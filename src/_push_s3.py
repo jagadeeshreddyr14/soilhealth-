@@ -16,8 +16,10 @@ def uploadfile(localpath, s3path):
 
 
 if __name__ == "__main__":
-    farm_list = [60862]
-    # create_invalidation()
+    
+    
+    farm_list = [60789]
+    create_invalidation()
     for farm_id in farm_list:
         
         client_data = pd.read_csv('/home/satyukt/Projects/1000/aws/soil_health_info/info.csv')

@@ -6,11 +6,12 @@ from glob import glob
 from ndvi_barren import get_py_geometry
 
 
-def get_zonal_stats(farm_path, farm_id, raster_path):
+def get_zonal_stats(farm_path, farm_id):
     
-    raster_loc = os.path.join(raster_path, farm_id)
+    tif_loc = f'../output/tif/{farm_id}'
+    
     feat = get_py_geometry(farm_path)
-    raster_images = glob(f"{raster_loc}/*")
+    raster_images = glob(f"{tif_loc}/*")
     soil_nutrients = {}
     for raster_image in raster_images:
 

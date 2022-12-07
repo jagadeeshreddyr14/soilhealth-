@@ -126,29 +126,27 @@ def fillNA(img):
     return window_1
 
 
-def saveTiff(nut, data_array, transform, farm_id, start_date, save_path_tiff):
+def saveTiff(nut, data_array, transform, farm_id):
 
-    file_name = os.path.basename(nut).split('.')[0]
-    str_date = start_date.date().strftime("%Y%m%d")
+    nut = os.path.basename(nut).split('.')[0]
     
-    
+    # N, P , K, OC, ph =  0.4, 0.4, 0.8, 2.2, 0.8
+    # 
+    N, P, K, OC, ph = 1, 1 ,1, 1, 1
 
-    N, P , K, OC, ph = 1,1,1,1,1
-    # N, P , K, OC, ph = 0.4, 0.4, 0.8, 2.2, 0.8
-
-    if os.path.basename(nut) == 'N.pkl':
+    if os.path.basename(nut) == 'N':
         data_array *= N
         # 
-    if os.path.basename(nut) == 'P.pkl':
+    if os.path.basename(nut) == 'P':
         data_array *= P
         
-    if os.path.basename(nut) == 'K.pkl':
+    if os.path.basename(nut) == 'K':
         data_array *=  K
         
-    if os.path.basename(nut) == 'OC.pkl':
+    if os.path.basename(nut) == 'OC':
         data_array *= OC
         
-    if os.path.basename(nut) == 'pH.pkl':
+    if os.path.basename(nut) == 'pH':
         data_array *= ph
 
 
@@ -169,7 +167,7 @@ def saveTiff(nut, data_array, transform, farm_id, start_date, save_path_tiff):
         "transform": transform
     }
     
-    out_path = os.path.join(save_path_tiff, farm_id,f"{farm_id}_{str_date}_{file_name}.tif")
+    out_path = f'../output/tif/{farm_id}/{farm_id}_{nut}.tif'
     
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 

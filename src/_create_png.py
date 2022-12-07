@@ -14,18 +14,19 @@ import matplotlib.pyplot as plt
 
 
 
-def create_png(farm_path, farm_id, tif_path, plt_date, nuts_ranges, png_save_path):
+def create_png(farm_cor, farm_id, plt_date, nuts_ranges):
     
-    tif_loc = os.path.join(tif_path, farm_id)
+    tif_loc = f'../output/tif/{farm_id}'
+    
     
     tif_files = glob.glob(f"{tif_loc}/*")
 
-    if isinstance(farm_path, str):
-        file = open(farm_path, "r")
+    if isinstance(farm_cor, str):
+        file = open(farm_cor, "r")
         footprint = file.read()
         file.close
     else:
-        footprint = farm_path.wkt
+        footprint = farm_cor.wkt
 
     shapely_poly = shapely.wkt.loads(footprint)
     crs = {'init': 'epsg:4326'}
@@ -90,11 +91,11 @@ def create_png(farm_path, farm_id, tif_path, plt_date, nuts_ranges, png_save_pat
             f"{png_title}\n{plt_date.date()}", ha='center', fontsize='20', va='top', fontweight='bold', fontstyle='normal')
         plt.axis('off')
         
-        png_save = os.path.join(png_save_path,farm_id,f"{farm_id}_{nut}.png")
+        png_save_path = f"../output/png/{farm_id}/{farm_id}_{nut}.png"
         
-        os.makedirs(os.path.dirname(png_save), exist_ok=True)
+        os.makedirs(os.path.dirname(png_save_path), exist_ok=True)
 
-        plt.savefig(png_save)
+        plt.savefig(png_save_path)
 
 
 if __name__ == "__main__":

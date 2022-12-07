@@ -22,6 +22,7 @@ def create_invalidation():
         }
     )
     invalidation_id = res['Invalidation']['Id']
+    print("Invalidation created successfully with Id: " + invalidation_id)
     return invalidation_id
 if __name__ == "__main__":
     id = create_invalidation()

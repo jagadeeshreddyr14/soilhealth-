@@ -7,7 +7,6 @@ from logs import MyLogger
 import argparse
 from delete_files import Delete_files
 from invalid import create_invalidation
-import pandas as pd
 
 def get_path(param, fdr_name):
     nnut = glob.glob(f"../data/models/{fdr_name[0]}/{param}*.pkl")[0]
@@ -15,13 +14,14 @@ def get_path(param, fdr_name):
     return nnut, nslr
 
     
-def run(farm):
+def run(farm_cor):
+    
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(dirname)
     
     logger = MyLogger(module_name=__name__,
                       filename="../logs/soil_health.log").create_logs()
     
-    dirname = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(dirname)
 
     ee.Initialize()
 
@@ -29,10 +29,6 @@ def run(farm):
 
     config.read('../Config/config.ini')
 
-    path_tiff = config['Output_path']['path_tiff']
-    path_csv = config['Output_path']['path_csv']
-    path_png = config['Output_path']['path_png']
-    
     nuts_ranges = {
         'N': (100, 300), #100 - 300
         'P': (5, 50),  #22.4 - 56.0
@@ -50,9 +46,7 @@ def run(farm):
     
     try:
     
-        compute_soil_health(farm, pixel_size, input_bands, soil_nuts, nuts_ranges, 
-                                    path_tiff, path_png, path_csv, report = True, push_s3 = True)
-        
+        compute_soil_health(farm_cor, pixel_size, input_bands, soil_nuts, nuts_ranges, report = True, push_s3 = False)
     except Exception as e:
         logger.info(f"{e}")
         
@@ -69,8 +63,7 @@ if __name__ == "__main__":
         Delete_files(int(args.fid))
         run(int(args.fid))
     else:
-        
-        farm_list  = [60947]
+        farm_list  = [60528]
         for i in farm_list:   
             Delete_files(i) 
             run(i)
