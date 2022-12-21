@@ -103,7 +103,7 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
         con = True
         farm_id = str(farm_cor)
         
-    fid_ti = f"{farm_id}_{datetime.datetime.now().strftime('%Y%m%dY%H%M%S')}"
+    fid_ti = f"{farm_id}_{datetime.datetime.now().strftime('%Y%m%dT%H%M%S')}"
 
     report_path = f'../output/Report/{farm_id}.pdf'
     
