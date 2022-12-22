@@ -63,7 +63,7 @@ if __name__ == "__main__":
         Delete_files(int(args.fid))
         run(int(args.fid))
     else:
-        farm_list  = [60528]
+        farm_list  = [61693]
         for i in farm_list:   
             Delete_files(i) 
             run(i)

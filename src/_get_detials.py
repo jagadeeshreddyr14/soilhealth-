@@ -24,7 +24,7 @@ def get_info(farm_id):
 
 if __name__ == "__main__":
     
-    fid = [60789]
+    fid = [61693]
     # 58925
     for fi in fid:
         df, referal_code = get_info(fi)
@@ -32,4 +32,4 @@ if __name__ == "__main__":
         id_client, polyinfo, crop = df
     
 
-        print(fi, crop)
+        print(polyinfo, crop)

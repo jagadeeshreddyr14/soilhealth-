@@ -20,8 +20,8 @@ def uploadfile(localpath, s3path):
 if __name__ == "__main__":
     
     
-    farm_list = [60789]
-    create_invalidation()
+    farm_list = [62325, 62318]
+    # create_invalidation()
     for fid in farm_list:
         
         df, referal_code = get_info(fid)

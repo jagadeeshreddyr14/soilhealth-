@@ -68,20 +68,21 @@ def get_end_date(farm_path):
     features = get_ee_Geometry(farm_path)
     
 
-    start_date = ee.Date(datetime.datetime.now() -
-                         datetime.timedelta(days=180))
-    current_date = ee.Date(datetime.datetime.now() -
-                           datetime.timedelta(days=0))
     
     
     # data = pd.read_csv('/home/satyukt/Downloads/mahindra.csv')
     # date = data.loc[data['Farm id']==int(farm_id),'Date of testing (GROUND)'].values[0]
-    # date = datetime.datetime.strptime(date, "%d-%m-%Y")
-
-    # day = 30
-    # start_date = date - datetime.timedelta(days=day)
-    # current_date = date + datetime.timedelta(days=day)
+#     date = '30-10-2021'
+#     date = datetime.datetime.strptime(date, "%d-%m-%Y")
+# # 
+#     day = 30
+#     start_date = date - datetime.timedelta(days=day)
+#     current_date = date + datetime.timedelta(days=day)
   
+    start_date = ee.Date(datetime.datetime.now() -
+                         datetime.timedelta(days=180))
+    current_date = ee.Date(datetime.datetime.now() -
+                           datetime.timedelta(days=0))
     
     imageCollection = ee.ImageCollection("COPERNICUS/S2_SR")\
                         .filterDate(start_date, current_date)\
