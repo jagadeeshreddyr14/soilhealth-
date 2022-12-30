@@ -85,7 +85,7 @@ def get_path(param, fdr_name):
     nslr = glob.glob(f"{model_path + fdr_name[1]}/{param}*.pkl")[0]
     return nnut, nslr
 
-def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_ranges, report = False, push_s3 = False):
+def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_ranges, lang, report = False, push_s3 = False):
     
 
     global logger
@@ -189,7 +189,7 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
         
     if report == True and referal_code!= '17684':
         
-        proc = Popen(["R --vanilla --args < GenerateReport.R %s %s %s %s %s" %(farm_id, crop, referal_code, lat, long)], shell=True,stdout=PIPE)
+        proc = Popen(["R --vanilla --args < GenerateReport.R %s %s %s %s %s %s" %(farm_id, crop, referal_code, lat,long, lang)], shell=True,stdout=PIPE)
         proc.communicate()
         atexit.register(proc.terminate)
         proc.pid

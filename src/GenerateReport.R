@@ -12,14 +12,22 @@ data = read.ini('/home/satyukt/Projects/1000/soil_health/Config/config.ini', enc
 fid <- args[1]
 crop <- args[2]
 referal_code <- args[3]
+
 lat <- args[4]
 long <- args[5]
+lang <- args[6]
 
 
-if ((referal_code == '17684') & (tolower(crop)=='sugarcane')){
+if ((referal_code == '17684') & (tolower(crop)=='sugarcane')) {
     rmd.path <- file.path(data$default_report$home_path, data$kannda_rmd$sugarcane)
-}else if (referal_code == '18913'){
+}else if (lang == 'hi'){
     rmd.path <- file.path(data$default_report$home_path, data$hindi$hindi_rmd)
+}else if (lang == 'mr'){
+    rmd.path <- file.path(data$default_report$home_path, data$marathi$marathi_rmd)
+}else if (lang == 'te'){
+    rmd.path <- file.path(data$default_report$home_path, data$telugu$telugu_rmd)
+}else if (lang == 'gu'){
+    rmd.path <- file.path(data$default_report$home_path, data$gujarati$gujarati_rmd)
 }else{
     rmd.path <- file.path(data$default_report$home_path, data$default_report$soil_rmd)
 }
