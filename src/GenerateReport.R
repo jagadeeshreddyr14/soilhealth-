@@ -31,6 +31,8 @@ if ((referal_code == '17684') & (tolower(crop)=='sugarcane')) {
 }else{
     rmd.path <- file.path(data$default_report$home_path, data$default_report$soil_rmd)
 }
+
+
 rmarkdown::render(rmd.path,
     params = list(args = fid, args1 = crop, args4 = lat, args5 = long),
     output_file = sprintf('%s%s%s.pdf',data$default_report$home_path, data$default_report$output_report,fid), clean = TRUE
