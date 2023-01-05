@@ -54,7 +54,7 @@ def run(farm_cor, lang=''):
     try:
     
         compute_soil_health(farm_cor, pixel_size, input_bands, soil_nuts, nuts_ranges, lang, 
-                            report = True, push_s3 = False)
+                            report = True, push_s3 = True)
     except Exception as e:
         logger.info(f"{e}")
         
@@ -68,12 +68,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.fid:
-        print("farmid as: % s" % args.fid)
+        print("fid is: % s" % args.fid)
         Delete_files(int(args.fid))
         run(int(args.fid), args.lang)
     else:
 
-        farm_list = [63071]
+        farm_list = [63007]
         for i in farm_list:   
             Delete_files(i) 
-            run(i,)
+            run(i)

@@ -183,17 +183,17 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
         
     lat = read_farm(farm_path).centroid[0].y
     long = read_farm(farm_path).centroid[0].x
+    
+    
        
     if report == True :
         
         if crop == None:
             crop = ''
-            
         if referal_code == None:
             referal_code = ''
         
-        subprocess.call(['Rscript', 'GenerateReport.R', str(farm_id), str(crop), str(referal_code), str(lat), str(long), lang])
-
+        subprocess.call(['Rscript', 'GenerateReport.R', str(farm_id), str(crop), str(referal_code), str(lat), str(long), str(lang)])
 
     if push_s3 == True:  
         
