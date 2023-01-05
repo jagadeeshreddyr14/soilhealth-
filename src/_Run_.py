@@ -15,7 +15,7 @@ def get_path(param, fdr_name):
     return nnut, nslr
 
     
-def run(farm_cor, lang=None):
+def run(farm_cor, lang=''):
     
     dirname = os.path.dirname(os.path.abspath(__file__))
     os.chdir(dirname)
@@ -72,7 +72,8 @@ if __name__ == "__main__":
         Delete_files(int(args.fid))
         run(int(args.fid), args.lang)
     else:
-        farm_list  = [31181]
+
+        farm_list = [63071]
         for i in farm_list:   
             Delete_files(i) 
-            run(i, )
+            run(i,)

@@ -12,7 +12,7 @@ data = read.ini('/home/satyukt/Projects/1000/soil_health/Config/config.ini', enc
 fid <- args[1]
 crop <- args[2]
 referal_code <- args[3]
-
+# 
 lat <- args[4]
 long <- args[5]
 lang <- args[6]

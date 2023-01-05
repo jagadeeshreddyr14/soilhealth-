@@ -16,6 +16,7 @@ from subprocess import Popen,PIPE
 import atexit
 import ast
 from shapely.geometry import shape
+import subprocess
 
 from soil_health import generate_points, get_predictor_bands, xcor, genPredictions, getDataFrame, saveTiff
 from ndvi_barren import get_end_date, read_farm
@@ -127,7 +128,7 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
         
     if get_area(farm_path) < 150:
         local_path = f'../data/Report_data/nodata/Farmsmall.pdf'
-        s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
+        s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{fid_ti}.pdf'
         uploadfile(local_path,s3path)  
         return logger.warning(f"Farm size small {farm_id}")
 
@@ -151,7 +152,7 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
             continue
     else: 
         local_path = f'../data/Report_data/nodata/Nodata.pdf'
-        s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{farm_id}.pdf'
+        s3path = f'sat2farm/{id_client}/{farm_id}/soilReportPDF/{fid_ti}.pdf'
         uploadfile(local_path,s3path)
         logger.info( 'No bands available')
         
@@ -168,32 +169,31 @@ def compute_soil_health(farm_cor, pixel_size, pred_bands, soil_nutrients, nuts_r
         gen_raster_save_tiff(nut, nut_slr, df_pred, df_tmp, transform,
                                 farm_id, len_y, len_x)
 
+    '''Generating CSV(NPK)'''
     zonal_stats = get_zonal_stats(farm_path, farm_id)
     
     format_zonal_stats(zonal_stats, farm_id, mid_date)
     
     """Generating PNG"""
-    png = True
-    if png == True:
-    
-        create_png(farm_path, farm_id, mid_date,
-                    nuts_ranges)
-        
-    '''Generating CSV(NPK)'''
 
-    
+    create_png(farm_path, farm_id, mid_date,
+                nuts_ranges)
+          
     '''lat and long for reverse geocode'''
         
     lat = read_farm(farm_path).centroid[0].y
     long = read_farm(farm_path).centroid[0].x
+       
+    if report == True :
         
-    if report == True and referal_code!= '17684':
+        if crop == None:
+            crop = ''
+            
+        if referal_code == None:
+            referal_code = ''
         
-        proc = Popen(["R --vanilla --args < GenerateReport.R %s %s %s %s %s %s" %(farm_id, crop, referal_code, lat,long, lang)], shell=True,stdout=PIPE)
-        proc.communicate()
-        atexit.register(proc.terminate)
-        proc.pid
-        logger.info('report generated')
+        subprocess.call(['Rscript', 'GenerateReport.R', str(farm_id), str(crop), str(referal_code), str(lat), str(long), lang])
+
 
     if push_s3 == True:  
         
